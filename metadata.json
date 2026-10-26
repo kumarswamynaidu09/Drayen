@@ -1,0 +1,8 @@
+{
+  "name": "Remix DRAYEN — Gothic Necklaces \u0026 Talismans",
+  "description": "Authentic gothic necklaces, chains, and talismans forged in antique silver and 316L surgical steel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
