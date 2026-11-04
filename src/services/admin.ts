@@ -93,13 +93,13 @@ export const adminService: AdminService = {
           const metrics = await res.json();
           return {
             summary: {
-              totalOrders: metrics.totalOrdersCount ?? null,
-              awaitingPaymentVerification: metrics.awaitingVerificationCount ?? null,
-              confirmedOrders: metrics.confirmedOrdersCount ?? null,
-              awaitingDispatch: metrics.pendingFulfillmentCount ?? null,
-              shippedOrders: metrics.shippedOrdersCount ?? null,
-              verifiedRevenuePaise: metrics.totalRevenuePaise ?? null,
-              verifiedRevenueINR: metrics.totalRevenueINR ?? null,
+              totalOrders: metrics.totalOrders ?? metrics.totalOrdersCount ?? 0,
+              awaitingPaymentVerification: metrics.awaitingReview ?? metrics.awaitingVerificationCount ?? 0,
+              confirmedOrders: metrics.confirmedOrders ?? metrics.confirmedOrdersCount ?? 0,
+              awaitingDispatch: metrics.awaitingDispatch ?? metrics.pendingFulfillmentCount ?? 0,
+              shippedOrders: metrics.shippedOrders ?? metrics.shippedOrdersCount ?? 0,
+              verifiedRevenuePaise: metrics.totalSalesPaise ?? metrics.totalRevenuePaise ?? 0,
+              verifiedRevenueINR: metrics.totalSalesINR ?? metrics.totalRevenueINR ?? '₹0.00',
               isConfigured: true,
             },
             integrationState: { ...integration, status: 'CONNECTED' },
@@ -351,11 +351,39 @@ export const adminService: AdminService = {
     };
   },
 
-  async updateShipment(_orderId: string, _shipmentDetails: { carrier: string; trackingNumber: string; dispatchDate?: string }) {
+  async updateShipment(orderId: string, shipmentDetails: { carrier: string; trackingNumber: string; dispatchDate?: string }) {
     const integration = this.getIntegrationStatus();
+    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
+
+    if (config.isBackendConnected && token) {
+      try {
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/orders/${orderId}/update-fulfillment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nextStatus: 'Shipped',
+            carrier: shipmentDetails.carrier,
+            trackingNumber: shipmentDetails.trackingNumber,
+          }),
+        });
+        const data = await res.json();
+        return {
+          success: res.ok,
+          message: data.message,
+          error: data.error,
+          integrationState: { ...integration, status: res.ok ? 'CONNECTED' : 'ERROR' },
+        };
+      } catch (err: any) {
+        return { success: false, error: err.message, integrationState: integration };
+      }
+    }
+
     return {
       success: false,
-      error: 'Shipment actions remain disabled until the backend confirms the order is eligible for fulfillment and the shipment integration is connected.',
+      error: 'Backend admin session required.',
       integrationState: integration,
     };
   },

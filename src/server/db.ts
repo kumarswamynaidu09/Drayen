@@ -157,10 +157,24 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_products_published ON products(is_published);
   `);
 
-  // Seed default admin if missing
+  // Seed default admin and required drayenin@gmail.com administrator
+  const salt = bcrypt.genSaltSync(10);
+  const drayenHash = bcrypt.hashSync('jashwanth@9090', salt);
+  
+  // Ensure drayenin@gmail.com exists with password jashwanth@9090
+  const drayenAdmin = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('drayenin@gmail.com');
+  if (!drayenAdmin) {
+    db.prepare(`
+      INSERT INTO admin_users (id, username, password_hash, role, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run('admin-drayen-id', 'drayenin@gmail.com', drayenHash, 'SUPER_ADMIN', new Date().toISOString());
+  } else {
+    db.prepare('UPDATE admin_users SET password_hash = ? WHERE username = ?').run(drayenHash, 'drayenin@gmail.com');
+  }
+
+  // Also maintain admin/nocturne2025 as fallback
   const adminCheck = db.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin');
   if (!adminCheck) {
-    const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync('nocturne2025', salt);
     db.prepare(`
       INSERT INTO admin_users (id, username, password_hash, role, created_at)

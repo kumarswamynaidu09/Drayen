@@ -86,12 +86,12 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                   className="w-20 h-24 bg-[#111111] flex-shrink-0 overflow-hidden cursor-pointer"
                 >
                   <img
-                    src={prod.images[0] || 'https://placehold.co/200x250/131313/e5e2e1?text=DRAYEN'}
+                    src={prod.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                     alt={prod.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
+                      (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
                     }}
                   />
                 </div>

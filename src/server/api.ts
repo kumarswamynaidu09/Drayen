@@ -719,12 +719,33 @@ apiRouter.post('/orders/:orderNumber/submit-payment', upload.any(), (req: Reques
 // Admin Login
 apiRouter.post('/admin/login', (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required.' });
+    const identifier = (req.body.email || req.body.username || '').trim();
+    const password = (req.body.password || '').trim();
+
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Email and password required.' });
     }
 
-    const admin = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username) as any;
+    // Direct check for specified admin credentials
+    if (identifier.toLowerCase() === 'drayenin@gmail.com' && password === 'jashwanth@9090') {
+      const token = jwt.sign(
+        { id: 'admin-drayen-id', username: 'drayenin@gmail.com', role: 'SUPER_ADMIN' },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      return res.json({
+        token,
+        user: {
+          id: 'admin-drayen-id',
+          username: 'drayenin@gmail.com',
+          email: 'drayenin@gmail.com',
+          role: 'SUPER_ADMIN',
+        },
+      });
+    }
+
+    // Database lookup
+    const admin = db.prepare('SELECT * FROM admin_users WHERE LOWER(username) = LOWER(?)').get(identifier) as any;
     if (!admin) {
       return res.status(401).json({ error: 'Invalid admin credentials.' });
     }
@@ -737,7 +758,7 @@ apiRouter.post('/admin/login', (req: Request, res: Response) => {
     const token = jwt.sign(
       { id: admin.id, username: admin.username, role: admin.role },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
@@ -745,6 +766,7 @@ apiRouter.post('/admin/login', (req: Request, res: Response) => {
       user: {
         id: admin.id,
         username: admin.username,
+        email: admin.username,
         role: admin.role,
       },
     });
@@ -824,6 +846,72 @@ apiRouter.get('/admin/orders', requireAdmin, (req: AdminAuthRequest, res: Respon
   }
 });
 
+// Admin Pending Payment Verifications
+apiRouter.get('/admin/verifications', requireAdmin, (_req: AdminAuthRequest, res: Response) => {
+  try {
+    const submissions = db.prepare(`
+      SELECT 
+        ps.id,
+        ps.order_id as orderId,
+        o.order_number as orderNumber,
+        ps.submitted_amount_paise as amountPaise,
+        ps.utr_number as utrNumber,
+        ps.screenshot_path as screenshotPath,
+        ps.submitted_at as submittedAt,
+        ps.verification_status as paymentStatus,
+        o.customer_name as customerName,
+        o.customer_phone as customerPhone
+      FROM payment_submissions ps
+      JOIN orders o ON ps.order_id = o.id
+      ORDER BY ps.submitted_at DESC
+    `).all() as any[];
+
+    res.json(
+      submissions.map((s) => ({
+        ...s,
+        screenshotUrl: s.screenshotPath ? `/api/admin/payments/${s.id}/screenshot` : undefined,
+      }))
+    );
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch payment verifications: ' + err.message });
+  }
+});
+
+// Admin Shipments
+apiRouter.get('/admin/shipments', requireAdmin, (_req: AdminAuthRequest, res: Response) => {
+  try {
+    const orders = db.prepare(`
+      SELECT 
+        o.id as orderId,
+        o.order_number as orderNumber,
+        o.customer_name as customerName,
+        o.customer_phone as customerPhone,
+        o.city,
+        o.state,
+        o.shipping_tier as shippingTier,
+        o.total_payable_paise as totalPaise,
+        o.order_status as orderStatus,
+        o.payment_status as paymentStatus,
+        s.carrier as courier,
+        s.tracking_number as trackingNumber,
+        s.dispatch_date as dispatchDate
+      FROM orders o
+      LEFT JOIN shipments s ON o.id = s.order_id
+      WHERE o.order_status IN ('Packed', 'Shipped', 'Delivered', 'Confirmed — Processing')
+      ORDER BY o.created_at DESC
+    `).all() as any[];
+
+    res.json(
+      orders.map((o) => ({
+        ...o,
+        isEligibleForFulfillment: o.paymentStatus === 'Verified' && o.orderStatus !== 'Delivered',
+      }))
+    );
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch shipments: ' + err.message });
+  }
+});
+
 // Admin View Screenshot Securely
 apiRouter.get('/admin/payments/:submissionId/screenshot', requireAdmin, (req: AdminAuthRequest, res: Response) => {
   try {
@@ -851,7 +939,8 @@ apiRouter.get('/admin/payments/:submissionId/screenshot', requireAdmin, (req: Ad
 apiRouter.post('/admin/orders/:id/verify-payment', requireAdmin, (req: AdminAuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { action, reason } = req.body; // action: 'approve' | 'reject' | 'request_correction'
+    const action = req.body.action || req.body.decision;
+    const reason = req.body.reason || req.body.notes;
 
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as any;
     if (!order) {
@@ -1391,7 +1480,7 @@ apiRouter.post('/admin/products/bulk', requireAdmin, (req: AdminAuthRequest, res
 });
 
 // Admin Action: Seed Authentic Atelier Vault Collection
-apiRouter.post(['/admin/seed-catalogue', '/admin/seed-products'], requireAdmin, (_req: AdminAuthRequest, res: Response) => {
+apiRouter.post(['/admin/seed', '/admin/seed-catalogue', '/admin/seed-products'], requireAdmin, (_req: AdminAuthRequest, res: Response) => {
   try {
     const result = seedAtelierCatalogue();
     res.json({ success: true, inserted: result.inserted, message: `Successfully populated ${result.inserted} authentic Atelier pieces into database.` });
@@ -1444,3 +1533,13 @@ apiRouter.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
+
+// Admin Seed Catalogue
+apiRouter.post('/admin/seed', requireAdmin, (_req: AdminAuthRequest, res: Response) => {
+  try {
+    const result = seedAtelierCatalogue();
+    res.json({ success: true, message: `Successfully seeded ${result.inserted} products.` });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to seed catalogue: ' + err.message });
+  }
+});

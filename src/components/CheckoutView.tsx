@@ -16,7 +16,6 @@ import {
   Clock, 
   MapPin, 
   Truck, 
-  CreditCard, 
   QrCode, 
   Package, 
   Printer, 
@@ -69,7 +68,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [promoError, setPromoError] = useState<string | null>(null);
 
   // Step 5: Payment Method
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'cod'>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
 
   // Step 6: Payment Evidence & Verification
   const [utrNumber, setUtrNumber] = useState('');
@@ -258,8 +257,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       isGuest: true,
     };
 
-    const mappedPaymentMethod: 'UPI_QR' | 'CARD' | 'COD' =
-      paymentMethod === 'upi' ? 'UPI_QR' : paymentMethod === 'card' ? 'CARD' : 'COD';
+    const mappedPaymentMethod: 'UPI_QR' | 'COD' =
+      paymentMethod === 'upi' ? 'UPI_QR' : 'COD';
 
     const checkoutReq: CheckoutRequest = {
       customer,
@@ -863,9 +862,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       className="p-3 bg-[#181818] border border-[#202020] flex items-center gap-4"
                     >
                       <img
-                        src={item.product.images[0] || 'https://placehold.co/100x120/121212/F0ECE5?text=DRAYEN'}
+                        src={item.product.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                         alt={item.product.name}
+                        referrerPolicy="no-referrer"
                         className="w-14 h-16 object-cover border border-[#202020]"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <h5 className="font-serif text-sm text-[#F0ECE5] truncate">{item.product.name}</h5>
@@ -946,35 +949,6 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                         </div>
                       </div>
                       <QrCode className="w-5 h-5 text-[#BFC0C2]" />
-                    </div>
-                  </label>
-
-                  {/* Card Option */}
-                  <label
-                    onClick={() => setPaymentMethod('card')}
-                    className={`block p-5 bg-[#181818] border cursor-pointer transition-all ${
-                      paymentMethod === 'card'
-                        ? 'border-[#651C2D] bg-[#651C2D]/5'
-                        : 'border-[#202020] hover:border-[#333333]'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="payment"
-                          checked={paymentMethod === 'card'}
-                          onChange={() => setPaymentMethod('card')}
-                          className="accent-[#651C2D]"
-                        />
-                        <div>
-                          <h4 className="font-serif text-lg text-[#F0ECE5]">Credit / Debit Card</h4>
-                          <p className="font-sans text-xs text-[#777777] mt-0.5">
-                            Visa, MasterCard, RuPay, American Express (256-bit tokenized gateway)
-                          </p>
-                        </div>
-                      </div>
-                      <CreditCard className="w-5 h-5 text-[#BFC0C2]" />
                     </div>
                   </label>
 
@@ -1354,9 +1328,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       className="flex items-center gap-3 p-2.5 bg-[#181818] border border-[#202020]"
                     >
                       <img
-                        src={item.product.images[0] || 'https://placehold.co/80x100/121212/F0ECE5?text=DRAYEN'}
+                        src={item.product.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                         alt={item.product.name}
+                        referrerPolicy="no-referrer"
                         className="w-12 h-14 object-cover border border-[#202020] shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-serif text-xs text-[#F0ECE5] truncate">{item.product.name}</h4>

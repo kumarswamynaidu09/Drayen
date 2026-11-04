@@ -149,9 +149,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           © 2025 DRAYEN ATELIER. ALL RIGHTS RESERVED.
         </p>
         <div className="flex items-center gap-2 font-mono text-[10px] text-[#888888] tracking-widest uppercase">
-          <span className="px-2 py-1 bg-[#141414] border border-[#242424]">UPI Direct</span>
-          <span className="px-2 py-1 bg-[#141414] border border-[#242424]">RuPay</span>
-          <span className="px-2 py-1 bg-[#141414] border border-[#242424]">Visa / MC</span>
+          <span className="px-2 py-1 bg-[#141414] border border-[#242424]">UPI Instant Transfer</span>
           <span className="px-2 py-1 bg-[#141414] border border-[#242424]">Cash on Delivery</span>
         </div>
       </div>

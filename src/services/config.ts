@@ -27,7 +27,7 @@ export const config: ServiceConfig = {
   contactEmail: import.meta.env.VITE_CONTACT_EMAIL || 'concierge@drayen.in',
   contactPhone: import.meta.env.VITE_CONTACT_PHONE || '+91 98400 12345',
   supportWhatsApp: import.meta.env.VITE_SUPPORT_WHATSAPP || '+919840012345',
-  isBackendConnected: Boolean(import.meta.env.VITE_API_BASE_URL),
+  isBackendConnected: true,
 };
 
 export function getIntegrationState(serviceName: string, endpoint?: string) {

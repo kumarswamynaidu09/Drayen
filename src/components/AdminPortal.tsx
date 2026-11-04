@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product, StoreSettings, IntegrationState, Order } from '../types';
+import { AdminProductDashboard } from './AdminProductDashboard';
 import { adminService, AdminDashboardSummary, InventoryItem, PendingPaymentRecord, ShipmentRecord } from '../services/admin';
 import { catalogueService } from '../services/catalogue';
 import { formatINR } from '../lib/money';
@@ -54,6 +55,64 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Administrator Auth Wall state
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    return typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
+  });
+  const [adminUser, setAdminUser] = useState<any>(() => {
+    try {
+      const stored = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_user') : null;
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loginEmail, setLoginEmail] = useState('drayenin@gmail.com');
+  const [loginPassword, setLoginPassword] = useState('jashwanth@9090');
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleAdminLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: loginEmail.trim(),
+          username: loginEmail.trim(),
+          password: loginPassword.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Authentication failed. Please verify credentials.');
+      }
+      if (data.token) {
+        sessionStorage.setItem('drayen_admin_token', data.token);
+        if (data.user) {
+          sessionStorage.setItem('drayen_admin_user', JSON.stringify(data.user));
+          setAdminUser(data.user);
+        }
+        setAuthToken(data.token);
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'Authentication failed. Please verify credentials.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem('drayen_admin_token');
+    sessionStorage.removeItem('drayen_admin_user');
+    setAuthToken(null);
+    setAdminUser(null);
+  };
 
   // Integration state
   const [integrationState, setIntegrationState] = useState<IntegrationState>(() =>
@@ -122,8 +181,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [storeSettings, setStoreSettings] = useState<StoreSettings | undefined>(undefined);
   const [settingsLoading, setSettingsLoading] = useState(false);
 
-  // Load Data on Tab Switch
+  // Load Data on Tab Switch or Authentication
   useEffect(() => {
+    if (!authToken) return;
     if (activeTab === 'overview') {
       loadOverview();
     } else if (activeTab === 'products') {
@@ -139,7 +199,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     } else if (activeTab === 'settings') {
       loadSettings();
     }
-  }, [activeTab]);
+  }, [activeTab, authToken]);
 
   const loadOverview = async () => {
     setSummaryLoading(true);
@@ -281,6 +341,126 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     { id: 'settings', label: '7. Store Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
+  // AUTH WALL CHECK: If no active admin session, display secure login gateway
+  if (!authToken) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-[#F0ECE5] flex flex-col items-center justify-center p-4 selection:bg-[#651C2D] selection:text-[#F0ECE5]">
+        <div className="w-full max-w-md bg-[#0e0e0e] border border-[#262626] p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#651C2D] via-[#a32e49] to-[#651C2D]" />
+
+          {/* Header */}
+          <div className="text-center space-y-2 mb-6">
+            <div className="w-12 h-12 mx-auto bg-[#141414] border border-[#333333] flex items-center justify-center text-[#e5e2e1] mb-3">
+              <Lock className="w-5 h-5 text-[#a32e49]" />
+            </div>
+            <h1 className="font-serif text-2xl uppercase tracking-[0.2em] text-[#F0ECE5]">
+              DRAYEN ATELIER
+            </h1>
+            <p className="font-mono text-xs uppercase tracking-widest text-[#888888]">
+              Vault Restricted Security Access
+            </p>
+            <p className="text-xs text-[#666666] leading-relaxed max-w-xs mx-auto pt-1">
+              Privileged administrative gateway for catalogue, ledger, payment verification, and order dispatch.
+            </p>
+          </div>
+
+          {/* Authorized Credentials Info Badge */}
+          <div className="mb-6 p-3 bg-[#141414] border border-[#222222] text-xs font-mono space-y-1">
+            <div className="flex items-center justify-between text-[#888888]">
+              <span>Authorized Administrator:</span>
+              <span className="text-[#F0ECE5] font-semibold">drayenin@gmail.com</span>
+            </div>
+            <div className="flex items-center justify-between text-[#666666] text-[11px]">
+              <span>Access Level:</span>
+              <span className="text-[#a32e49] uppercase font-bold tracking-wider">Super Administrator</span>
+            </div>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            {loginError && (
+              <div className="p-3 bg-red-950/60 border border-red-800 text-red-200 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-mono uppercase tracking-widest text-[#888888]">
+                Administrator Email
+              </label>
+              <input
+                type="email"
+                required
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="drayenin@gmail.com"
+                className="w-full bg-[#141414] border border-[#2b2b2b] px-3.5 py-2.5 text-xs text-white placeholder-[#555555] focus:border-[#a32e49] focus:outline-none transition-colors font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-mono uppercase tracking-widest text-[#888888]">
+                Vault Security Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="jashwanth@9090"
+                  className="w-full bg-[#141414] border border-[#2b2b2b] px-3.5 py-2.5 pr-10 text-xs text-white placeholder-[#555555] focus:border-[#a32e49] focus:outline-none transition-colors font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777777] hover:text-white transition-colors cursor-pointer"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full py-3 bg-[#651C2D] hover:bg-[#85253b] text-white font-mono text-xs uppercase tracking-widest transition-colors font-bold flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+            >
+              {isLoggingIn ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Authenticate & Unlock Console</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Return link */}
+          <div className="mt-6 pt-4 border-t border-[#202020] text-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigateHome) onNavigateHome();
+                else onClose();
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[#777777] hover:text-[#F0ECE5] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Return to Public Atelier</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#080808] text-[#F0ECE5] flex flex-col font-sans selection:bg-[#651C2D] selection:text-[#F0ECE5]">
       
@@ -307,11 +487,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 bg-[#141414] border border-[#202020] text-[11px] font-mono">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-[#BFC0C2] uppercase tracking-wider">Frontend Contract Mode</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#141414] border border-[#202020] text-[11px] font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[#F0ECE5] hidden sm:inline">drayenin@gmail.com</span>
+            <span className="text-[10px] bg-[#651C2D] text-white px-1.5 py-0.5 font-bold">SUPER ADMIN</span>
           </div>
+
+          <button
+            onClick={handleAdminLogout}
+            title="Lock Console & Sign Out"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#181818] hover:bg-red-950/60 hover:text-red-300 text-[#888888] border border-[#202020] text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Log Out</span>
+          </button>
 
           <button
             onClick={() => {
@@ -321,23 +511,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#181818] hover:bg-[#202020] text-[#BFC0C2] hover:text-[#F0ECE5] border border-[#202020] text-xs font-sans uppercase tracking-wider transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Store</span>
+            <span>Store</span>
           </button>
         </div>
       </header>
-
-      {/* Security & Architecture Boundary Banner */}
-      <div className="bg-[#121212] border-b border-[#202020] px-4 md:px-8 py-2.5">
-        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-mono">
-          <div className="flex items-center gap-2 text-amber-400">
-            <Shield className="w-4 h-4 shrink-0" />
-            <span className="font-bold uppercase tracking-wider">Administrative Security Notice</span>
-          </div>
-          <p className="text-[#777777] text-[11px] leading-relaxed">
-            Role-based permissions (RBAC), protected database storage, and payment approvals require the backend authentication server. All data operations are bound to typed frontend contracts.
-          </p>
-        </div>
-      </div>
 
       {/* Main Workspace: Sidebar + Content Area */}
       <div className="flex-1 flex max-w-[1440px] w-full mx-auto">
@@ -455,112 +632,204 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
               </div>
 
-              {/* 6 Required Summary Cards */}
+              {/* 6 Metric Telemetry Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* 1. Total Orders */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Total Orders
-                  </span>
-                  {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.totalOrders != null ? (
-                    <span className="font-serif text-3xl font-bold text-[#F0ECE5]">{summary.totalOrders}</span>
-                  ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
-                  )}
-                  <p className="text-[11px] font-sans text-[#777777]">All recorded customer orders in database</p>
-                </div>
-
-                {/* 2. Awaiting Payment Verification */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Awaiting Payment Verification
-                  </span>
-                  {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.awaitingPaymentVerification != null ? (
-                    <span className="font-serif text-3xl font-bold text-amber-400">
-                      {summary.awaitingPaymentVerification}
+                {/* 1. Verified Revenue */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 hover:border-[#353535] transition-colors">
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      Verified Revenue
                     </span>
-                  ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
-                  )}
-                  <p className="text-[11px] font-sans text-[#777777]">UPI transfer receipts pending auditor review</p>
-                </div>
-
-                {/* 3. Confirmed Orders */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Confirmed Orders
-                  </span>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  </div>
                   {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.confirmedOrders != null ? (
-                    <span className="font-serif text-3xl font-bold text-[#F0ECE5]">{summary.confirmedOrders}</span>
+                    <div className="h-9 w-28 bg-[#181818] animate-pulse" />
                   ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
-                  )}
-                  <p className="text-[11px] font-sans text-[#777777]">Verified payments transitioning to workshop</p>
-                </div>
-
-                {/* 4. Awaiting Dispatch */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Awaiting Dispatch
-                  </span>
-                  {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.awaitingDispatch != null ? (
-                    <span className="font-serif text-3xl font-bold text-[#F0ECE5]">{summary.awaitingDispatch}</span>
-                  ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
-                  )}
-                  <p className="text-[11px] font-sans text-[#777777]">Vault pieces packaged for BlueDart pickup</p>
-                </div>
-
-                {/* 5. Shipped Orders */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Shipped Orders
-                  </span>
-                  {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.shippedOrders != null ? (
-                    <span className="font-serif text-3xl font-bold text-emerald-400">{summary.shippedOrders}</span>
-                  ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
-                  )}
-                  <p className="text-[11px] font-sans text-[#777777]">Consignments in transit across India</p>
-                </div>
-
-                {/* 6. Verified Payment Revenue */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#777777] block">
-                    Verified Payment Revenue
-                  </span>
-                  {summaryLoading ? (
-                    <div className="h-9 w-24 bg-[#181818] animate-pulse" />
-                  ) : summary?.verifiedRevenuePaise != null ? (
-                    <span className="font-serif text-3xl font-bold text-emerald-400">
-                      {formatINR(summary.verifiedRevenuePaise)}
+                    <span className="font-serif text-3xl font-bold text-emerald-400 block">
+                      {summary?.verifiedRevenueINR || formatINR(summary?.verifiedRevenuePaise || 0)}
                     </span>
-                  ) : (
-                    <span className="font-mono text-xs text-amber-400 block pt-1">Data unavailable — connect backend</span>
                   )}
-                  <p className="text-[11px] font-sans text-[#777777]">Strictly verified bank receipts</p>
+                  <p className="text-[11px] font-mono text-[#777777]">Strictly verified UPI merchant credits</p>
+                </div>
+
+                {/* 2. Total Orders */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 hover:border-[#353535] transition-colors">
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      Total Orders
+                    </span>
+                    <ShoppingBag className="w-4 h-4 text-[#BFC0C2]" />
+                  </div>
+                  {summaryLoading ? (
+                    <div className="h-9 w-20 bg-[#181818] animate-pulse" />
+                  ) : (
+                    <span className="font-serif text-3xl font-bold text-[#F0ECE5] block">
+                      {summary?.totalOrders ?? 0}
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[11px] font-mono text-[#777777]">All customer orders in ledger</p>
+                    <button
+                      onClick={() => setActiveTab('orders')}
+                      className="text-[11px] font-mono text-[#BFC0C2] hover:text-white underline cursor-pointer"
+                    >
+                      View All
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Awaiting Payment Verification */}
+                <div className={`p-6 space-y-2 border transition-colors ${
+                  (summary?.awaitingPaymentVerification ?? 0) > 0
+                    ? 'bg-[#181113] border-[#651C2D]/60'
+                    : 'bg-[#121212] border-[#202020]'
+                }`}>
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      Pending Payment Review
+                    </span>
+                    <Clock className="w-4 h-4 text-amber-400" />
+                  </div>
+                  {summaryLoading ? (
+                    <div className="h-9 w-20 bg-[#181818] animate-pulse" />
+                  ) : (
+                    <span className="font-serif text-3xl font-bold text-amber-400 block">
+                      {summary?.awaitingPaymentVerification ?? 0}
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[11px] font-mono text-[#777777]">UPI UTR receipts awaiting sign-off</p>
+                    <button
+                      onClick={() => setActiveTab('payments')}
+                      className="text-[11px] font-mono text-amber-300 hover:text-amber-200 underline cursor-pointer font-bold"
+                    >
+                      Verify Now
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Confirmed Orders */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 hover:border-[#353535] transition-colors">
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      In Workshop Processing
+                    </span>
+                    <CheckCircle className="w-4 h-4 text-sky-400" />
+                  </div>
+                  {summaryLoading ? (
+                    <div className="h-9 w-20 bg-[#181818] animate-pulse" />
+                  ) : (
+                    <span className="font-serif text-3xl font-bold text-[#F0ECE5] block">
+                      {summary?.confirmedOrders ?? 0}
+                    </span>
+                  )}
+                  <p className="text-[11px] font-mono text-[#777777]">Verified talismans forged and packed</p>
+                </div>
+
+                {/* 5. Awaiting Dispatch */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 hover:border-[#353535] transition-colors">
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      Ready for BlueDart Pickup
+                    </span>
+                    <Truck className="w-4 h-4 text-[#BFC0C2]" />
+                  </div>
+                  {summaryLoading ? (
+                    <div className="h-9 w-20 bg-[#181818] animate-pulse" />
+                  ) : (
+                    <span className="font-serif text-3xl font-bold text-[#F0ECE5] block">
+                      {summary?.awaitingDispatch ?? 0}
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[11px] font-mono text-[#777777]">Packed parcels awaiting courier scan</p>
+                    <button
+                      onClick={() => setActiveTab('shipments')}
+                      className="text-[11px] font-mono text-[#BFC0C2] hover:text-white underline cursor-pointer"
+                    >
+                      Dispatch
+                    </button>
+                  </div>
+                </div>
+
+                {/* 6. Shipped Orders */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 hover:border-[#353535] transition-colors">
+                  <div className="flex items-center justify-between text-[#888888]">
+                    <span className="font-mono text-xs uppercase tracking-widest block">
+                      Dispatched & In Transit
+                    </span>
+                    <Truck className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  {summaryLoading ? (
+                    <div className="h-9 w-20 bg-[#181818] animate-pulse" />
+                  ) : (
+                    <span className="font-serif text-3xl font-bold text-emerald-400 block">
+                      {summary?.shippedOrders ?? 0}
+                    </span>
+                  )}
+                  <p className="text-[11px] font-mono text-[#777777]">Consignments with active AWB tracking</p>
                 </div>
               </div>
 
-              {/* Integration Status Notice Card */}
-              <div className="p-6 bg-[#121212] border border-[#202020] space-y-3">
-                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#BFC0C2]">
-                  <Info className="w-4 h-4 text-[#651C2D]" />
-                  <span>Authoritative Metric Protocol</span>
+              {/* Quick Operational Command Hub */}
+              <div className="p-6 bg-[#121212] border border-[#202020] space-y-4">
+                <div className="flex items-center justify-between border-b border-[#202020] pb-3">
+                  <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-white font-bold">
+                    <LayoutDashboard className="w-4 h-4 text-[#651C2D]" />
+                    <span>Quick Operational Shortcuts</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-[#777777]">Authorized Database: data/drayen.db</span>
                 </div>
-                <p className="font-sans text-xs text-[#777777] leading-relaxed">
-                  In accordance with DRAYEN no-mock-data rules, summary metrics are never fabricated or simulated with zeros. When your teammate connects <code className="text-[#BFC0C2] bg-[#181818] px-1.5 py-0.5">GET /api/admin/metrics</code>, real metrics populate automatically.
-                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+                  <button
+                    onClick={() => setActiveTab('products')}
+                    className="p-4 bg-[#161616] hover:bg-[#1f1f1f] border border-[#262626] text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-[#651C2D] group-hover:text-red-400 mb-2">
+                      <Layers className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                    <span className="font-serif text-sm text-white block font-semibold">Manage Products</span>
+                    <span className="text-[11px] text-[#777777] font-mono mt-0.5 block">Create, edit, price, stock</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('payments')}
+                    className="p-4 bg-[#161616] hover:bg-[#1f1f1f] border border-[#262626] text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-amber-400 mb-2">
+                      <ShieldCheck className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                    <span className="font-serif text-sm text-white block font-semibold">Verify Payments</span>
+                    <span className="text-[11px] text-[#777777] font-mono mt-0.5 block">Inspect UTRs & receipts</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="p-4 bg-[#161616] hover:bg-[#1f1f1f] border border-[#262626] text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-sky-400 mb-2">
+                      <ShoppingBag className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                    <span className="font-serif text-sm text-white block font-semibold">Order Roster</span>
+                    <span className="text-[11px] text-[#777777] font-mono mt-0.5 block">Status updates & tracking</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('inventory')}
+                    className="p-4 bg-[#161616] hover:bg-[#1f1f1f] border border-[#262626] text-left transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-emerald-400 mb-2">
+                      <Boxes className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                    <span className="font-serif text-sm text-white block font-semibold">Stockroom Inventory</span>
+                    <span className="text-[11px] text-[#777777] font-mono mt-0.5 block">Low stock alerts & counts</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -569,133 +838,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {/* TAB 2: PRODUCT MANAGEMENT SCREEN                          */}
           {/* ======================================================== */}
           {activeTab === 'products' && (
-            <div className="space-y-6 max-w-5xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#202020] pb-6">
-                <div>
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
-                    Vault Catalogue
-                  </span>
-                  <h1 className="font-serif text-3xl text-[#F0ECE5]">Product Management</h1>
-                  <p className="font-sans text-xs text-[#777777] mt-1">
-                    Manage gothic artifacts, specifications, finishes, chains, and pricing.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleOpenProductEdit()}
-                    className="px-4 py-2 bg-[#651C2D] hover:bg-[#85253b] text-[#F0ECE5] text-xs font-sans uppercase tracking-widest font-bold flex items-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create Artifact</span>
-                  </button>
-                  <button
-                    onClick={loadProducts}
-                    className="p-2 bg-[#181818] hover:bg-[#202020] border border-[#202020] text-[#BFC0C2]"
-                    title="Refresh"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#777777]" />
-                  <input
-                    type="text"
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && loadProducts()}
-                    placeholder="Search by name, SKU, material, or finish..."
-                    className="w-full bg-[#121212] border border-[#202020] pl-9 pr-4 py-2 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
-                  />
-                </div>
-                <select
-                  value={productCategoryFilter}
-                  onChange={(e) => {
-                    setProductCategoryFilter(e.target.value);
-                    setTimeout(loadProducts, 50);
-                  }}
-                  className="bg-[#121212] border border-[#202020] px-4 py-2 text-xs text-[#F0ECE5] focus:outline-none"
-                >
-                  <option value="All">All Categories</option>
-                  <option value="Pendants">Pendants</option>
-                  <option value="Gothic Necklaces">Gothic Necklaces</option>
-                  <option value="Chains">Chains</option>
-                </select>
-              </div>
-
-              {/* Products Table */}
-              <div className="bg-[#121212] border border-[#202020] overflow-x-auto">
-                <table className="w-full text-left text-xs font-sans">
-                  <thead className="bg-[#161616] border-b border-[#202020] text-[#777777] uppercase tracking-wider">
-                    <tr>
-                      <th className="p-4">Piece</th>
-                      <th className="p-4">SKU</th>
-                      <th className="p-4">Category</th>
-                      <th className="p-4">Selling Price</th>
-                      <th className="p-4">Stock</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#181818]">
-                    {products.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="p-8 text-center text-[#777777]">
-                          No products found in catalogue.
-                        </td>
-                      </tr>
-                    ) : (
-                      products.map((prod) => (
-                        <tr key={prod.id} className="hover:bg-[#161616] transition-colors">
-                          <td className="p-4 flex items-center gap-3">
-                            <img
-                              src={prod.images?.[0] || 'https://placehold.co/60x80/121212/F0ECE5?text=DRY'}
-                              alt={prod.name}
-                              className="w-10 h-12 object-cover border border-[#202020]"
-                            />
-                            <div>
-                              <span className="font-serif text-sm text-[#F0ECE5] block">{prod.name}</span>
-                              <span className="text-[10px] text-[#777777]">{prod.material}</span>
-                            </div>
-                          </td>
-                          <td className="p-4 font-mono text-xs text-[#BFC0C2]">{prod.sku}</td>
-                          <td className="p-4 text-[#BFC0C2]">{prod.category}</td>
-                          <td className="p-4 font-medium text-[#F0ECE5]">
-                            {formatINR(prod.selling_price_paise)}
-                          </td>
-                          <td className="p-4">
-                            <span className={prod.stock_quantity <= 5 ? 'text-amber-400 font-bold' : 'text-[#BFC0C2]'}>
-                              {prod.stock_quantity ?? 0}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-bold ${
-                              prod.is_published
-                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800'
-                                : 'bg-stone-900 text-[#777777]'
-                            }`}>
-                              {prod.is_published ? 'Published' : 'Archived'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleOpenProductEdit(prod)}
-                              className="px-3 py-1 bg-[#181818] hover:bg-[#202020] border border-[#202020] text-[#BFC0C2] hover:text-[#F0ECE5] text-[11px] uppercase tracking-wider transition-colors cursor-pointer"
-                            >
-                              Edit / Specs
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <AdminProductDashboard
+              products={products.map(p => ({
+                ...p,
+                is_detachable: p.is_detachable ? 1 : 0,
+                is_published: p.is_published ? 1 : 0
+              }))}
+              isLoading={productsLoading}
+              onRefresh={loadProducts}
+              onSeed={async () => {
+                const token = sessionStorage.getItem('drayen_admin_token');
+                const res = await fetch('/api/admin/seed', {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                   console.log('Catalogue seeded successfully.');
+                   loadProducts();
+                } else {
+                   console.log('Failed to seed catalogue.');
+                }
+              }}
+              onShowToast={(msg) => console.log('Toast:', msg)}
+              authFetch={async (url, options) => {
+                const token = sessionStorage.getItem('drayen_admin_token');
+                return fetch(url, {
+                  ...options,
+                  headers: {
+                    ...options?.headers,
+                    Authorization: `Bearer ${token}`
+                  }
+                });
+              }}
+            />
           )}
 
           {/* ======================================================== */}

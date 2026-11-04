@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '../types';
 import { formatINR } from '../lib/money';
 import { Search, X, SlidersHorizontal, Grid, Columns } from 'lucide-react';
@@ -8,6 +8,7 @@ interface ShopViewProps {
   isLoading?: boolean;
   initialCategory?: string;
   initialSearchQuery?: string;
+  onCategoryChange?: (category: string) => void;
   onSelectProduct: (product: Product) => void;
   onAddToCart: (product: Product, quantity?: number) => void;
   onToggleWishlist: (productId: string) => void;
@@ -20,6 +21,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
   isLoading = false,
   initialCategory,
   initialSearchQuery = '',
+  onCategoryChange,
   onSelectProduct,
   onAddToCart,
   onToggleWishlist,
@@ -33,6 +35,38 @@ export const ShopView: React.FC<ShopViewProps> = ({
   const [sortBy, setSortBy] = useState<string>('featured');
   const [colCount, setColCount] = useState<number>(3);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  // Sync category with external prop changes (e.g. clicking top navigation bar)
+  useEffect(() => {
+    if (!initialCategory || initialCategory === 'All' || initialCategory.toLowerCase() === 'all') {
+      setSelectedCategory('All');
+    } else {
+      const catLower = initialCategory.toLowerCase();
+      if (catLower.includes('necklace')) {
+        setSelectedCategory('Gothic Necklaces');
+      } else if (catLower.includes('pendant')) {
+        setSelectedCategory('Pendants');
+      } else if (catLower.includes('chain')) {
+        setSelectedCategory('Chains');
+      } else if (catLower.includes('choker')) {
+        setSelectedCategory('Chokers');
+      } else {
+        setSelectedCategory(initialCategory);
+      }
+    }
+  }, [initialCategory]);
+
+  // Sync search query from external prop changes
+  useEffect(() => {
+    if (initialSearchQuery !== undefined) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
+
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    onCategoryChange?.(cat);
+  };
 
   // Filter and sort pure logic
   const filteredProducts = useMemo(() => {
@@ -48,13 +82,26 @@ export const ShopView: React.FC<ShopViewProps> = ({
         if (!matchesName && !matchesCategory && !matchesDesc && !matchesFinish) return false;
       }
 
-      // Category filter
+      // Category filter with flexible matching
       if (selectedCategory !== 'All') {
-        if (selectedCategory === 'Pendants' && !p.category.toLowerCase().includes('pendant')) return false;
-        if (selectedCategory === 'Gothic Necklaces' && !p.category.toLowerCase().includes('necklace') && !p.name.toLowerCase().includes('choker') && !p.name.toLowerCase().includes('chain')) return false;
-        if (selectedCategory === 'Chains' && !p.name.toLowerCase().includes('chain') && !p.category.toLowerCase().includes('chain')) return false;
-        if (selectedCategory === 'Chokers' && !p.name.toLowerCase().includes('choker') && !p.category.toLowerCase().includes('choker')) return false;
-        if (selectedCategory === 'Statement Pieces' && p.selling_price_paise < 69900 && !p.short_description?.toLowerCase().includes('statement')) return false;
+        const catLower = selectedCategory.toLowerCase();
+        const pCat = (p.category || '').toLowerCase();
+        const pName = (p.name || '').toLowerCase();
+        const pDesc = (p.short_description || '').toLowerCase();
+
+        if (catLower.includes('pendant')) {
+          if (!pCat.includes('pendant') && !pName.includes('pendant')) return false;
+        } else if (catLower.includes('necklace')) {
+          if (!pCat.includes('necklace') && !pName.includes('necklace') && !pName.includes('chain') && !pName.includes('choker')) return false;
+        } else if (catLower.includes('chain')) {
+          if (!pName.includes('chain') && !pCat.includes('chain')) return false;
+        } else if (catLower.includes('choker')) {
+          if (!pName.includes('choker') && !pCat.includes('choker')) return false;
+        } else if (catLower.includes('statement')) {
+          if (p.selling_price_paise < 69900 && !pDesc.includes('statement')) return false;
+        } else {
+          if (!pCat.includes(catLower) && !pName.includes(catLower)) return false;
+        }
       }
 
       // Price filter
@@ -81,198 +128,61 @@ export const ShopView: React.FC<ShopViewProps> = ({
     setSelectedFinish('all');
     setSortBy('featured');
     setSearchQuery('');
+    onCategoryChange?.('All');
   };
 
   const hasActiveFilters = selectedCategory !== 'All' || selectedPriceRange !== 'all' || selectedFinish !== 'all' || searchQuery.trim().length > 0;
 
   return (
-    <div className="flex flex-col w-full text-[#e5e2e1] pt-16">
-      {/* Sub-Bar & Breadcrumbs */}
-      <section className="w-full bg-[#111111] border-b border-[#222222]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#888888]">
-            <button onClick={onNavigateHome} className="hover:text-white transition-colors cursor-pointer">
-              Home
-            </button>
-            <span className="text-[#444444]">/</span>
-            <span className="text-[#888888]">Collections</span>
-            <span className="text-[#444444]">/</span>
-            <span className="text-white font-semibold">Shop All</span>
-          </nav>
-          <div className="flex items-center gap-4 text-[#888888] font-mono text-xs">
-            <span>Fast Express Dispatch Across India</span>
-          </div>
-        </div>
-      </section>
+    <div className="flex flex-col w-full text-[#e5e2e1]">
 
-      {/* Section Title Banner */}
-      <section className="w-full bg-[#0e0e0e] py-8 md:py-12 border-b border-[#222222]">
+      {/* Section Title Banner — Sleek and compact with dynamic category title */}
+      <section className="w-full bg-[#0c0c0c] py-4 md:py-5 border-b border-[#202020]">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.25em] text-[#888888] font-mono block">
-                Direct Handcrafted Atelier
-              </span>
-              <h1 className="font-serif text-3xl md:text-5xl uppercase tracking-wide text-white">
-                Gothic Jewellery Collection
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.2em] text-[#888888]">
+                <span>Direct Handcrafted Atelier</span>
+                <span>•</span>
+                <span className="text-[#BFC0C2]">{selectedCategory === 'All' ? 'Full Vault' : selectedCategory}</span>
+              </div>
+              <h1 className="font-serif text-2xl md:text-3xl uppercase tracking-wide text-white">
+                {selectedCategory === 'All'
+                  ? 'Gothic Jewellery Collection'
+                  : selectedCategory.toLowerCase().includes('necklace')
+                  ? 'Gothic Necklaces Collection'
+                  : `${selectedCategory} Collection`}
               </h1>
-              <p className="text-sm text-[#a0a0a0] font-light max-w-xl leading-relaxed">
-                Forged in 316L hypoallergenic surgical steel and hand-oxidized antique silver. Sweatproof, water-resistant, and non-tarnishing.
+              <p className="text-xs text-[#8e8e8e] font-light max-w-xl">
+                Forged in 316L hypoallergenic surgical steel and hand-oxidized antique silver. Sweatproof and non-tarnishing.
               </p>
             </div>
-            <div className="flex items-baseline gap-2 font-mono text-xs text-[#888888] self-start md:self-end">
-              <span className="text-2xl font-bold text-white leading-none">
-                {filteredProducts.length}
-              </span>
-              <span className="tracking-widest uppercase">Pieces Available</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Filter & Sort Toolbar Bar */}
-      <section className="sticky top-16 z-30 w-full bg-[#141414]/95 backdrop-blur-md border-b border-[#222222]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
-          {/* Left: Search input + Mobile Filter Toggle */}
-          <div className="flex items-center gap-3 flex-1 min-w-[280px] max-w-md">
-            <button
-              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="lg:hidden flex items-center gap-2 px-3 py-2 bg-[#1c1c1c] text-white font-mono text-xs uppercase tracking-wider cursor-pointer border border-[#303030]"
-              type="button"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filters</span>
-            </button>
-
-            {/* In-Page Keyword Search */}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#777777]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter by name, finish, symbol..."
-                className="w-full bg-[#1a1a1a] border border-[#2c2c2c] pl-9 pr-8 py-2 text-xs text-white placeholder-[#777777] font-mono focus:border-[#651C2D] focus:outline-none"
-              />
-              {searchQuery && (
+            <div className="flex items-center gap-4 self-start sm:self-auto">
+              {hasActiveFilters && (
                 <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#777777] hover:text-white"
-                  title="Clear search"
+                  onClick={clearAllFilters}
+                  className="text-[11px] font-mono text-[#888888] hover:text-white underline cursor-pointer"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  Clear Filters
                 </button>
               )}
-            </div>
-          </div>
-
-          {/* Center: Quick category pill buttons */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {['All', 'Pendants', 'Gothic Necklaces', 'Chains', 'Chokers'].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer border ${
-                  selectedCategory === cat
-                    ? 'bg-[#651C2D] text-white border-[#85253b]'
-                    : 'bg-[#181818] text-[#888888] hover:text-white border-[#282828]'
-                }`}
-              >
-                {cat === 'Gothic Necklaces' ? 'Necklaces' : cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Right: Sort & Layout Toggle */}
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="flex items-center gap-2">
-              <label className="hidden md:inline font-mono text-xs uppercase text-[#888888]" htmlFor="sortSelector">
-                Sort:
-              </label>
-              <select
-                id="sortSelector"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-[#1a1a1a] text-white font-mono text-xs uppercase tracking-wider px-3 py-2 border border-[#2c2c2c] focus:outline-none cursor-pointer"
-              >
-                <option value="featured">Featured Pieces</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-              </select>
-            </div>
-
-            {/* Layout Columns */}
-            <div className="hidden md:flex items-center border border-[#2c2c2c] bg-[#1a1a1a] p-0.5">
-              <button
-                onClick={() => setColCount(3)}
-                className={`p-1.5 cursor-pointer ${colCount === 3 ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-white'}`}
-                title="3 Columns View"
-              >
-                <Columns className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setColCount(4)}
-                className={`p-1.5 cursor-pointer ${colCount === 4 ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-white'}`}
-                title="4 Columns View"
-              >
-                <Grid className="w-4 h-4" />
-              </button>
+              <div className="flex items-baseline gap-1.5 font-mono text-xs text-[#888888]">
+                <span className="text-xl font-bold text-white leading-none">
+                  {filteredProducts.length}
+                </span>
+                <span className="tracking-widest uppercase text-[10px]">Pieces Available</span>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Active Filters Tag Strip */}
-        {hasActiveFilters && (
-          <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-2 bg-[#101010] border-t border-[#1e1e1e] flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-[#777777] uppercase text-[10px] font-mono">Filters:</span>
-            {selectedCategory !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#1f1f1f] text-white font-mono text-xs border border-[#333333]">
-                {selectedCategory}
-                <button onClick={() => setSelectedCategory('All')} className="text-[#888888] hover:text-white">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#1f1f1f] text-white font-mono text-xs border border-[#333333]">
-                Keyword: "{searchQuery}"
-                <button onClick={() => setSearchQuery('')} className="text-[#888888] hover:text-white">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {selectedPriceRange !== 'all' && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#1f1f1f] text-white font-mono text-xs border border-[#333333]">
-                {selectedPriceRange === 'under-499' ? 'Under ₹499' : selectedPriceRange === '500-799' ? '₹500 – ₹799' : '₹800+'}
-                <button onClick={() => setSelectedPriceRange('all')} className="text-[#888888] hover:text-white">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {selectedFinish !== 'all' && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#1f1f1f] text-white font-mono text-xs border border-[#333333]">
-                {selectedFinish}
-                <button onClick={() => setSelectedFinish('all')} className="text-[#888888] hover:text-white">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            <button
-              onClick={clearAllFilters}
-              className="text-xs text-[#888888] hover:text-white underline font-mono uppercase tracking-wider ml-2 cursor-pointer"
-            >
-              Clear All
-            </button>
-          </div>
-        )}
       </section>
 
       {/* Main Content Layout: Sidebar + Product Grid */}
-      <section className="w-full bg-[#0e0e0e] py-8 md:py-12">
+      <section className="w-full bg-[#0a0a0a] py-6 md:py-8">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Filter Sidebar */}
-            <aside className={`${mobileFilterOpen ? 'block' : 'hidden'} lg:block lg:col-span-3 sticky top-36 space-y-6 pr-4`}>
+            <aside className={`${mobileFilterOpen ? 'block' : 'hidden'} lg:block lg:col-span-3 sticky top-20 space-y-6 pr-4`}>
               {/* Category */}
               <div className="bg-[#141414] p-4 space-y-3 border border-[#262626]">
                 <div className="pb-2 border-b border-[#262626]">
@@ -282,7 +192,7 @@ export const ShopView: React.FC<ShopViewProps> = ({
                   {['All', 'Pendants', 'Gothic Necklaces', 'Chains', 'Chokers', 'Statement Pieces'].map((cat) => (
                     <label
                       key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      onClick={() => handleCategorySelect(cat)}
                       className="flex items-center justify-between cursor-pointer hover:text-white transition-colors group py-0.5"
                     >
                       <span className="flex items-center gap-2.5">
@@ -420,9 +330,9 @@ export const ShopView: React.FC<ShopViewProps> = ({
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                             alt={prod.name}
                             referrerPolicy="no-referrer"
-                            src={prod.images[0] || 'https://placehold.co/400x500/131313/e5e2e1?text=DRAYEN'}
+                            src={prod.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                             onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
+                              (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
                             }}
                           />
                           {/* Quick Add Overlay */}

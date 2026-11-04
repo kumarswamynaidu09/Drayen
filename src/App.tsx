@@ -234,6 +234,7 @@ export default function App() {
       {/* Primary Sticky Header */}
       <Header
         currentView={route.path}
+        activeCategory={route.path === 'shop' || route.path === 'collection' ? (route.params.slug || route.query.category || '') : ''}
         onNavigate={handleNavigate}
         cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
         wishlistCount={wishlistIds.length}
@@ -286,7 +287,7 @@ export default function App() {
       />
 
       {/* Active Route Viewport */}
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-16">
         
         {/* ROUTE: / (Home) */}
         {route.path === 'home' && (
@@ -308,6 +309,13 @@ export default function App() {
             isLoading={productsLoading}
             initialCategory={route.params.slug || route.query.category}
             initialSearchQuery={route.query.search}
+            onCategoryChange={(cat) => {
+              if (cat === 'All') {
+                navigate('/shop');
+              } else {
+                navigate(`/shop?category=${encodeURIComponent(cat)}`);
+              }
+            }}
             onSelectProduct={(p) => navigate(`/products/${p.slug}`)}
             onAddToCart={handleAddToCart}
             wishlistIds={wishlistIds}

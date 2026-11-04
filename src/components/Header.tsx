@@ -5,6 +5,7 @@ import { Customer } from '../types';
 
 interface HeaderProps {
   currentView: string;
+  activeCategory?: string;
   onNavigate: (view: string, param?: string) => void;
   cartCount: number;
   wishlistCount: number;
@@ -16,6 +17,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentView,
+  activeCategory = '',
   onNavigate,
   cartCount,
   wishlistCount,
@@ -64,12 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 bg-[#080808]/95 backdrop-blur-md border-b border-[#202020]">
-        {/* Top Announcement Ribbon */}
-        <div className="w-full bg-[#121212] py-1.5 px-4 text-center border-b border-[#202020]">
-          <p className="text-[10px] md:text-[11px] tracking-[0.2em] text-[#BFC0C2] uppercase font-mono">
-            Complimentary Insured Shipping Across India on Orders Above ₹499
-          </p>
-        </div>
+
 
         {/* Primary Navigation Bar */}
         <div className="h-16 max-w-[1440px] mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
@@ -103,33 +100,47 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => handleNavClick('shop')}
               className={`hover:text-[#F0ECE5] transition-colors cursor-pointer py-1 ${
-                currentView === 'shop' ? 'text-[#F0ECE5] border-b-2 border-[#651C2D]' : ''
+                currentView === 'shop' && (!activeCategory || activeCategory.toLowerCase() === 'all')
+                  ? 'text-[#F0ECE5] border-b-2 border-[#651C2D] font-bold'
+                  : ''
               }`}
             >
               Shop All
             </button>
             <button
               onClick={() => handleNavClick('shop', 'Gothic Necklaces')}
-              className="hover:text-[#F0ECE5] transition-colors cursor-pointer py-1"
+              className={`hover:text-[#F0ECE5] transition-colors cursor-pointer py-1 ${
+                currentView === 'shop' && activeCategory.toLowerCase().includes('necklace')
+                  ? 'text-[#F0ECE5] border-b-2 border-[#651C2D] font-bold'
+                  : ''
+              }`}
             >
               Necklaces
             </button>
             <button
               onClick={() => handleNavClick('shop', 'Pendants')}
-              className="hover:text-[#F0ECE5] transition-colors cursor-pointer py-1"
+              className={`hover:text-[#F0ECE5] transition-colors cursor-pointer py-1 ${
+                currentView === 'shop' && activeCategory.toLowerCase().includes('pendant')
+                  ? 'text-[#F0ECE5] border-b-2 border-[#651C2D] font-bold'
+                  : ''
+              }`}
             >
               Pendants
             </button>
             <button
               onClick={() => handleNavClick('shop', 'Chains')}
-              className="hover:text-[#F0ECE5] transition-colors cursor-pointer py-1"
+              className={`hover:text-[#F0ECE5] transition-colors cursor-pointer py-1 ${
+                currentView === 'shop' && activeCategory.toLowerCase().includes('chain')
+                  ? 'text-[#F0ECE5] border-b-2 border-[#651C2D] font-bold'
+                  : ''
+              }`}
             >
               Chains
             </button>
             <button
               onClick={() => handleNavClick('orders')}
               className={`hover:text-[#F0ECE5] transition-colors cursor-pointer py-1 ${
-                currentView === 'orders' ? 'text-[#F0ECE5] border-b-2 border-[#651C2D]' : ''
+                currentView === 'orders' ? 'text-[#F0ECE5] border-b-2 border-[#651C2D] font-bold' : ''
               }`}
             >
               Track Order
@@ -379,35 +390,55 @@ export const Header: React.FC<HeaderProps> = ({
               <nav className="space-y-3 font-mono text-xs uppercase tracking-widest">
                 <button
                   onClick={() => handleNavClick('shop')}
-                  className="w-full text-left py-2 text-[#BFC0C2] hover:text-[#F0ECE5] transition-colors flex items-center justify-between"
+                  className={`w-full text-left py-2 transition-colors flex items-center justify-between ${
+                    currentView === 'shop' && (!activeCategory || activeCategory.toLowerCase() === 'all')
+                      ? 'text-[#F0ECE5] font-bold border-l-2 border-[#651C2D] pl-2'
+                      : 'text-[#BFC0C2] hover:text-[#F0ECE5]'
+                  }`}
                 >
                   <span>Shop All Catalogue</span>
                   <ChevronRight className="w-3.5 h-3.5 text-[#777777]" />
                 </button>
                 <button
                   onClick={() => handleNavClick('shop', 'Gothic Necklaces')}
-                  className="w-full text-left py-2 text-[#BFC0C2] hover:text-[#F0ECE5] transition-colors flex items-center justify-between"
+                  className={`w-full text-left py-2 transition-colors flex items-center justify-between ${
+                    currentView === 'shop' && activeCategory.toLowerCase().includes('necklace')
+                      ? 'text-[#F0ECE5] font-bold border-l-2 border-[#651C2D] pl-2'
+                      : 'text-[#BFC0C2] hover:text-[#F0ECE5]'
+                  }`}
                 >
                   <span>Gothic Necklaces</span>
                   <ChevronRight className="w-3.5 h-3.5 text-[#777777]" />
                 </button>
                 <button
                   onClick={() => handleNavClick('shop', 'Pendants')}
-                  className="w-full text-left py-2 text-[#BFC0C2] hover:text-[#F0ECE5] transition-colors flex items-center justify-between"
+                  className={`w-full text-left py-2 transition-colors flex items-center justify-between ${
+                    currentView === 'shop' && activeCategory.toLowerCase().includes('pendant')
+                      ? 'text-[#F0ECE5] font-bold border-l-2 border-[#651C2D] pl-2'
+                      : 'text-[#BFC0C2] hover:text-[#F0ECE5]'
+                  }`}
                 >
                   <span>Handcrafted Pendants</span>
                   <ChevronRight className="w-3.5 h-3.5 text-[#777777]" />
                 </button>
                 <button
                   onClick={() => handleNavClick('shop', 'Chains')}
-                  className="w-full text-left py-2 text-[#BFC0C2] hover:text-[#F0ECE5] transition-colors flex items-center justify-between"
+                  className={`w-full text-left py-2 transition-colors flex items-center justify-between ${
+                    currentView === 'shop' && activeCategory.toLowerCase().includes('chain')
+                      ? 'text-[#F0ECE5] font-bold border-l-2 border-[#651C2D] pl-2'
+                      : 'text-[#BFC0C2] hover:text-[#F0ECE5]'
+                  }`}
                 >
                   <span>Solid Chains</span>
                   <ChevronRight className="w-3.5 h-3.5 text-[#777777]" />
                 </button>
                 <button
                   onClick={() => handleNavClick('orders')}
-                  className="w-full text-left py-2 text-[#BFC0C2] hover:text-[#F0ECE5] transition-colors flex items-center justify-between"
+                  className={`w-full text-left py-2 transition-colors flex items-center justify-between ${
+                    currentView === 'orders'
+                      ? 'text-[#F0ECE5] font-bold border-l-2 border-[#651C2D] pl-2'
+                      : 'text-[#BFC0C2] hover:text-[#F0ECE5]'
+                  }`}
                 >
                   <span>Track Order</span>
                   <ChevronRight className="w-3.5 h-3.5 text-[#777777]" />

@@ -162,12 +162,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               >
                 <div className="w-14 h-16 bg-[#1a1a1a] flex-shrink-0 overflow-hidden border border-[#2a2a2a]">
                   <img
-                    src={product.images[0] || 'https://placehold.co/100x120/131313/e5e2e1?text=DRAYEN'}
+                    src={product.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                     alt={product.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
+                      (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
                     }}
                   />
                 </div>

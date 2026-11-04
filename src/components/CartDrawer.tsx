@@ -93,12 +93,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               >
                 <div className="w-20 h-24 bg-[#111111] flex-shrink-0 overflow-hidden border border-[#262626]">
                   <img
-                    src={item.product.images[0] || 'https://placehold.co/200x250/131313/e5e2e1?text=DRAYEN'}
+                    src={item.product.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
                     alt={item.product.name}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
+                      (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
                     }}
                   />
                 </div>

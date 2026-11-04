@@ -42,7 +42,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   ];
 
   const images = product.images.length > 0 ? product.images : [
-    'https://placehold.co/600x750/131313/e5e2e1?text=DRAYEN'
+    '/assets/aistudio/Image_1_2990c1d6.png'
   ];
 
   const handlePincodeCheck = () => {
@@ -503,7 +503,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   <img
                     alt={rel.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    src={rel.images[0] || 'https://placehold.co/400x500/131313/e5e2e1?text=DRAYEN'}
+                    referrerPolicy="no-referrer"
+                    src={rel.images[0] || '/assets/aistudio/Image_5_d2e5193b.png'}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/assets/aistudio/Image_5_d2e5193b.png';
+                    }}
                   />
                   <span className="absolute top-3 left-3 bg-surface-container-lowest/80 px-2.5 py-1 font-label-caps text-[10px] text-primary uppercase tracking-widest">
                     {rel.category}

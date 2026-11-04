@@ -295,7 +295,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         onClick={() => onSelectProduct(prod)}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                         alt={prod.name}
-                        src={prod.images[0] || 'https://placehold.co/400x500/131313/e5e2e1?text=DRAYEN'}
+                        referrerPolicy="no-referrer"
+                        src={prod.images[0] || '/assets/aistudio/Image_1_2990c1d6.png'}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/assets/aistudio/Image_1_2990c1d6.png';
+                        }}
                       />
                       {/* Quick Add Overlay */}
                       <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
@@ -430,7 +434,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       onClick={() => onSelectProduct(prod)}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                       alt={prod.name}
-                      src={prod.images[0] || 'https://placehold.co/400x500/131313/e5e2e1?text=DRAYEN'}
+                      referrerPolicy="no-referrer"
+                      src={prod.images[0] || '/assets/aistudio/Image_3_f2ee25fe.png'}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/assets/aistudio/Image_3_f2ee25fe.png';
+                      }}
                     />
                     <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                       <button
