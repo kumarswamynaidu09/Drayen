@@ -1371,6 +1371,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
 
               <form
+                key={storeSettings ? JSON.stringify(storeSettings) : 'default-settings'}
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const target = e.currentTarget;
