@@ -901,30 +901,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 }
 
                 // Helper to map camelCase form fields to snake_case database columns
-                const sanitizeProductPayload = (b: any) => ({
-                  name: b.name,
-                  sku: b.sku,
-                  slug: b.slug,
-                  category: b.category,
-                  selling_price_paise: b.sellingPricePaise ?? b.selling_price_paise,
-                  original_price_paise: b.originalPricePaise ?? b.original_price_paise,
-                  material: b.material,
-                  finish: b.finish,
-                  chain_length: b.chainLength ?? b.chain_length,
-                  chain_thickness: b.chainThickness ?? b.chain_thickness,
-                  pendant_height: b.pendantHeight ?? b.pendant_height,
-                  pendant_width: b.pendantWidth ?? b.pendant_width,
-                  pendant_thickness: b.pendantThickness ?? b.pendant_thickness,
-                  pendant_weight: b.pendantWeight ?? b.pendant_weight,
-                  clasp_type: b.claspType ?? b.clasp_type,
-                  is_detachable: Boolean(b.isDetachable ?? b.is_detachable),
-                  short_description: b.shortDescription ?? b.short_description,
-                  full_description: b.fullDescription ?? b.full_description,
-                  care_instructions: b.careInstructions ?? b.care_instructions,
-                  stock_quantity: b.stockQuantity ?? b.stock_quantity ?? 0,
-                  is_published: Boolean(b.isPublished ?? b.is_published ?? true),
-                  images: b.images || [],
-                });
+                const sanitizeProductPayload = (b: any) => {
+                  const sellingPaise = Number(b.sellingPricePaise ?? b.selling_price_paise ?? 0);
+                  const originalPaise = b.originalPricePaise != null ? Number(b.originalPricePaise) : (b.original_price_paise != null ? Number(b.original_price_paise) : null);
+                  const stock = Number(b.stockQuantity ?? b.stock_quantity ?? 0);
+
+                  return {
+                    name: b.name,
+                    sku: b.sku,
+                    slug: b.slug,
+                    category: b.category,
+                    selling_price_paise: sellingPaise,
+                    original_price_paise: originalPaise,
+                    material: b.material,
+                    finish: b.finish,
+                    chain_length: b.chainLength ?? b.chain_length,
+                    chain_thickness: b.chainThickness ?? b.chain_thickness,
+                    pendant_height: b.pendantHeight ?? b.pendant_height,
+                    pendant_width: b.pendantWidth ?? b.pendant_width,
+                    pendant_thickness: b.pendantThickness ?? b.pendant_thickness,
+                    pendant_weight: b.pendantWeight ?? b.pendant_weight,
+                    clasp_type: b.claspType ?? b.clasp_type,
+                    is_detachable: Boolean(b.isDetachable ?? b.is_detachable),
+                    short_description: b.shortDescription ?? b.short_description,
+                    full_description: b.fullDescription ?? b.full_description,
+                    care_instructions: b.careInstructions ?? b.care_instructions,
+                    stock_quantity: stock,
+                    is_published: Boolean(b.isPublished ?? b.is_published ?? true),
+                    images: b.images || [],
+                  };
+                };
 
                 // Route POST (Create)
                 if (method === 'POST' && url === '/api/admin/products') {

@@ -1332,12 +1332,13 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                         min="1"
                         required
                         value={editingProduct.selling_price_paise ? Math.round(editingProduct.selling_price_paise / 100) : ''}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            selling_price_paise: e.target.value === '' ? 0 : Math.round(Number(e.target.value) * 100)
-                          })
-                        }
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setEditingProduct((prev) => ({
+                            ...prev,
+                            selling_price_paise: val === '' ? 0 : Math.round(Number(val) * 100)
+                          }));
+                        }}
                         placeholder="e.g. 1999"
                         className="w-full bg-[#181717] border border-[#2d2929] px-4 py-2.5 text-sm text-white font-mono focus:border-[#651C2D] focus:outline-none"
                       />
@@ -1380,14 +1381,15 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                         type="number"
                         min="0"
                         required
-                        value={editingProduct.stock_quantity !== undefined && editingProduct.stock_quantity !== 0 ? editingProduct.stock_quantity : (editingProduct.stock_quantity === 0 ? '' : '')}
+                        value={editingProduct.stock_quantity !== undefined && editingProduct.stock_quantity !== null && editingProduct.stock_quantity !== 0 ? editingProduct.stock_quantity : (editingProduct.stock_quantity === 0 ? '0' : '')}
                         placeholder="0"
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            stock_quantity: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0)
-                          })
-                        }
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setEditingProduct((prev) => ({
+                            ...prev,
+                            stock_quantity: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0)
+                          }));
+                        }}
                         className="w-full bg-[#181717] border border-[#2d2929] px-4 py-2.5 text-sm text-white font-mono focus:border-[#651C2D] focus:outline-none"
                       />
                     </div>
