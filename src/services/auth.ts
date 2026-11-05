@@ -85,12 +85,20 @@ export const authService: AuthService = {
           password,
         });
 
-        if (!error && data.user) {
+        if (error) {
+          return {
+            success: false,
+            error: error.message,
+            integrationState: integration,
+          };
+        }
+
+        if (data.user) {
           const names = (data.user.user_metadata?.full_name || email.split('@')[0]).split(' ');
           const customer: Customer = {
             id: data.user.id,
             email: data.user.email || email,
-            phone: '',
+            phone: data.user.user_metadata?.phone || '',
             firstName: names[0] || 'Patron',
             lastName: names.slice(1).join(' ') || '',
             savedAddresses: [],
@@ -101,12 +109,16 @@ export const authService: AuthService = {
           sessionStorage.setItem('drayen_customer_user', JSON.stringify(customer));
           return { success: true, user: customer, token, integrationState: { ...integration, status: 'CONNECTED' } };
         }
-      } catch (err) {
-        console.warn('[AuthService] Supabase direct sign-in notice:', err);
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err.message || 'Supabase authentication failed.',
+          integrationState: integration,
+        };
       }
     }
 
-    // 2. API Proxy Fallback
+    // 2. API Proxy Fallback (when running local full-stack server)
     try {
       const res = await fetch(`${config.apiBaseUrl}/api/auth/login`, {
         method: 'POST',
@@ -152,7 +164,15 @@ export const authService: AuthService = {
           },
         });
 
-        if (!error && data.user) {
+        if (error) {
+          return {
+            success: false,
+            error: error.message,
+            integrationState: integration,
+          };
+        }
+
+        if (data.user) {
           const names = details.fullName.trim().split(' ');
           const customer: Customer = {
             id: data.user.id,
@@ -166,14 +186,24 @@ export const authService: AuthService = {
           const token = data.session?.access_token || 'sb_token_' + Date.now();
           sessionStorage.setItem('drayen_customer_token', token);
           sessionStorage.setItem('drayen_customer_user', JSON.stringify(customer));
-          return { success: true, user: customer, token, integrationState: { ...integration, status: 'CONNECTED' } };
+          return {
+            success: true,
+            user: customer,
+            token,
+            message: data.session ? 'Account created and authenticated!' : 'Account registered! If confirmation is required, please check your inbox.',
+            integrationState: { ...integration, status: 'CONNECTED' },
+          };
         }
-      } catch (err) {
-        console.warn('[AuthService] Supabase direct signup notice:', err);
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err.message || 'Supabase registration error.',
+          integrationState: integration,
+        };
       }
     }
 
-    // 2. API Proxy Fallback
+    // 2. API Proxy Fallback (when running local full-stack server)
     try {
       const res = await fetch(`${config.apiBaseUrl}/api/auth/register`, {
         method: 'POST',
