@@ -201,7 +201,7 @@ export const adminService: AdminService = {
     return { products: [], integrationState: integration };
   },
 
-  async createProduct(product: Partial<Product>) {
+  async createProduct(product: any) {
     const integration = this.getIntegrationStatus();
 
     if (isSupabaseConfigured) {
@@ -209,20 +209,26 @@ export const adminService: AdminService = {
         const payload = {
           name: product.name,
           sku: product.sku || `DRY-${Date.now().toString().slice(-4)}`,
-          slug: (product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          short_description: product.short_description,
-          full_description: product.full_description,
+          slug: (product.slug || product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          short_description: product.short_description || '',
+          full_description: product.full_description || '',
           category: product.category || 'Pendants',
-          selling_price_paise: product.selling_price_paise || 0,
-          original_price_paise: product.original_price_paise || null,
+          selling_price_paise: Number(product.selling_price_paise ?? product.sellingPricePaise ?? 0),
+          original_price_paise: product.original_price_paise != null ? Number(product.original_price_paise) : (product.originalPricePaise != null ? Number(product.originalPricePaise) : null),
           material: product.material || '316L Surgical Steel',
           finish: product.finish || 'Antique Silver',
-          chain_length: product.chain_length || '',
-          chain_thickness: product.chain_thickness || '',
-          pendant_height: product.pendant_height || '',
-          images: product.images || [],
-          stock_quantity: product.stock_quantity || 0,
-          is_published: product.is_published ?? true,
+          chain_length: product.chain_length || product.chainLength || '',
+          chain_thickness: product.chain_thickness || product.chainThickness || '',
+          pendant_height: product.pendant_height || product.pendantHeight || '',
+          pendant_width: product.pendant_width || product.pendantWidth || '',
+          pendant_thickness: product.pendant_thickness || product.pendantThickness || '',
+          pendant_weight: product.pendant_weight || product.pendantWeight || '',
+          clasp_type: product.clasp_type || product.claspType || '',
+          is_detachable: Boolean(product.is_detachable ?? product.isDetachable ?? true),
+          care_instructions: product.care_instructions || product.careInstructions || '',
+          images: Array.isArray(product.images) ? product.images : [],
+          stock_quantity: Number(product.stock_quantity ?? product.stockQuantity ?? 0),
+          is_published: Boolean(product.is_published ?? product.isPublished ?? true),
         };
 
         const { data, error } = await supabase.from('products').insert([payload]).select().single();
@@ -240,15 +246,47 @@ export const adminService: AdminService = {
     return { success: false, error: 'Database connection unavailable', integrationState: integration };
   },
 
-  async updateProduct(productId: string, changes: Partial<Product>) {
+  async updateProduct(productId: string, changes: any) {
     const integration = this.getIntegrationStatus();
 
     if (isSupabaseConfigured) {
       try {
         const payload: Record<string, any> = {
-          ...changes,
           updated_at: new Date().toISOString(),
         };
+
+        if (changes.name !== undefined) payload.name = changes.name;
+        if (changes.sku !== undefined) payload.sku = changes.sku;
+        if (changes.slug !== undefined) payload.slug = changes.slug;
+        if (changes.category !== undefined) payload.category = changes.category;
+        if (changes.short_description !== undefined) payload.short_description = changes.short_description;
+        if (changes.full_description !== undefined) payload.full_description = changes.full_description;
+        if (changes.material !== undefined) payload.material = changes.material;
+        if (changes.finish !== undefined) payload.finish = changes.finish;
+        if (changes.chain_length !== undefined) payload.chain_length = changes.chain_length;
+        if (changes.chain_thickness !== undefined) payload.chain_thickness = changes.chain_thickness;
+        if (changes.pendant_height !== undefined) payload.pendant_height = changes.pendant_height;
+        if (changes.pendant_width !== undefined) payload.pendant_width = changes.pendant_width;
+        if (changes.pendant_thickness !== undefined) payload.pendant_thickness = changes.pendant_thickness;
+        if (changes.pendant_weight !== undefined) payload.pendant_weight = changes.pendant_weight;
+        if (changes.clasp_type !== undefined) payload.clasp_type = changes.clasp_type;
+        if (changes.care_instructions !== undefined) payload.care_instructions = changes.care_instructions;
+        if (changes.is_detachable !== undefined) payload.is_detachable = Boolean(changes.is_detachable);
+        if (changes.images !== undefined) payload.images = changes.images;
+
+        if (changes.selling_price_paise !== undefined || changes.sellingPricePaise !== undefined) {
+          payload.selling_price_paise = Number(changes.selling_price_paise ?? changes.sellingPricePaise ?? 0);
+        }
+        if (changes.original_price_paise !== undefined || changes.originalPricePaise !== undefined) {
+          const orig = changes.original_price_paise ?? changes.originalPricePaise;
+          payload.original_price_paise = orig != null ? Number(orig) : null;
+        }
+        if (changes.stock_quantity !== undefined || changes.stockQuantity !== undefined) {
+          payload.stock_quantity = Number(changes.stock_quantity ?? changes.stockQuantity ?? 0);
+        }
+        if (changes.is_published !== undefined || changes.isPublished !== undefined) {
+          payload.is_published = Boolean(changes.is_published ?? changes.isPublished);
+        }
         const { error } = await supabase.from('products').update(payload).eq('id', productId);
         if (!error) {
           return { success: true, integrationState: { ...integration, status: 'CONNECTED' } };
