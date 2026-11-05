@@ -150,6 +150,42 @@ export function initDatabase() {
       updated_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS customers (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE,
+      phone TEXT UNIQUE,
+      full_name TEXT NOT NULL,
+      password_hash TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS customer_addresses (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      label TEXT DEFAULT 'Vault Address',
+      recipient_name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      line1 TEXT NOT NULL,
+      line2 TEXT,
+      city TEXT NOT NULL,
+      state TEXT NOT NULL,
+      postal_code TEXT NOT NULL,
+      is_default INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS visitor_logs (
+      id TEXT PRIMARY KEY,
+      visitor_id TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      path TEXT NOT NULL,
+      referrer TEXT,
+      customer_id TEXT,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
     CREATE INDEX IF NOT EXISTS idx_orders_access_token ON orders(access_token);
     CREATE INDEX IF NOT EXISTS idx_payment_submissions_utr ON payment_submissions(utr_number);

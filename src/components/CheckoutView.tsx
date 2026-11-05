@@ -63,8 +63,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [shippingTier, setShippingTier] = useState<'standard' | 'express'>('standard');
 
   // Step 4: Promo Code & Review
-  const [promoCodeInput, setPromoCodeInput] = useState('FIRSTDROP');
-  const [appliedPromo, setAppliedPromo] = useState('FIRSTDROP');
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState('');
   const [promoError, setPromoError] = useState<string | null>(null);
 
   // Step 5: Payment Method

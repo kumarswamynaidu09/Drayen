@@ -60,6 +60,28 @@ export default function App() {
     }
   }, [wishlistIds]);
 
+  // Log visitor activity to database on every route navigation
+  useEffect(() => {
+    try {
+      let visitorId = localStorage.getItem('drayen_visitor_id');
+      if (!visitorId) {
+        visitorId = 'v_' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+        localStorage.setItem('drayen_visitor_id', visitorId);
+      }
+      fetch('/api/analytics/visitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId,
+          path: route.path,
+          referrer: document.referrer || '',
+        }),
+      }).catch(() => {});
+    } catch {
+      // Non-blocking telemetry
+    }
+  }, [route.path]);
+
 
 
   // Keyboard shortcut: '/' opens search

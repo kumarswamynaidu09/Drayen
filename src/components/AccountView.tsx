@@ -458,49 +458,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </p>
             </div>
 
-            {/* Auth Mode Toggle (Password vs Mobile OTP) */}
-            <div className="flex border-b border-[#202020] mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMode('password');
-                  setFeedbackMessage(null);
-                }}
-                className={`flex-1 pb-3 text-xs font-mono uppercase tracking-wider text-center transition-colors border-b-2 ${
-                  loginMode === 'password'
-                    ? 'border-[#651C2D] text-[#F0ECE5] font-bold'
-                    : 'border-transparent text-[#777777] hover:text-[#BFC0C2]'
-                }`}
-              >
-                Password Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMode('otp');
-                  setFeedbackMessage(null);
-                }}
-                className={`flex-1 pb-3 text-xs font-mono uppercase tracking-wider text-center transition-colors border-b-2 ${
-                  loginMode === 'otp'
-                    ? 'border-[#651C2D] text-[#F0ECE5] font-bold'
-                    : 'border-transparent text-[#777777] hover:text-[#BFC0C2]'
-                }`}
-              >
-                Mobile OTP
-              </button>
-            </div>
-
-            {/* Integration Status Notice */}
-            <div className="p-4 bg-[#141414] border border-[#202020] mb-6 text-xs font-sans text-[#BFC0C2] space-y-1.5">
-              <div className="flex items-center gap-2 text-amber-400 font-mono text-[11px] uppercase tracking-wider font-semibold">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Backend Integration Notice</span>
-              </div>
-              <p className="text-[#777777] text-[11px] leading-relaxed">
-                Customer Authentication endpoints (<code className="text-[#BFC0C2]">POST /api/auth/login</code>) will be connected by backend teammate. In strict accordance with frontend guidelines, no mock credentials or fake logins are accepted.
-              </p>
-            </div>
-
             {/* Feedback Alert */}
             {feedbackMessage && (
               <div
@@ -514,157 +471,82 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
             )}
 
-            {loginMode === 'password' ? (
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                    Email Address or Mobile Number
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
-                    <input
-                      type="text"
-                      required
-                      value={loginEmailOrPhone}
-                      onChange={(e) => setLoginEmailOrPhone(e.target.value)}
-                      placeholder="patron@drayen.in or 9840012345"
-                      className="w-full bg-[#080808] border border-[#202020] pl-10 pr-4 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="font-mono text-xs uppercase tracking-wider text-[#BFC0C2]">
-                      Password
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('forgot-password');
-                        onNavigate('/forgot-password');
-                      }}
-                      className="text-[11px] font-sans text-[#777777] hover:text-[#BFC0C2] transition-colors"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
-                    <input
-                      type={showLoginPassword ? 'text' : 'password'}
-                      required
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••••••"
-                      className="w-full bg-[#080808] border border-[#202020] pl-10 pr-10 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#777777] hover:text-[#F0ECE5]"
-                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1">
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
+                  Email Address or Mobile Number
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
                   <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="accent-[#651C2D] w-4 h-4 bg-[#080808] border-[#202020]"
+                    type="text"
+                    required
+                    value={loginEmailOrPhone}
+                    onChange={(e) => setLoginEmailOrPhone(e.target.value)}
+                    placeholder="patron@drayen.in or 9840012345"
+                    className="w-full bg-[#080808] border border-[#202020] pl-10 pr-4 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
                   />
-                  <label htmlFor="rememberMe" className="text-xs text-[#777777] select-none cursor-pointer">
-                    Remember my credentials on this device
-                  </label>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3.5 bg-[#651C2D] hover:bg-[#7e2338] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50 mt-2"
-                >
-                  {isLoading ? 'Verifying Credentials...' : 'Sign In'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                    10-Digit Mobile Number
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-mono text-xs uppercase tracking-wider text-[#BFC0C2]">
+                    Password
                   </label>
-                  <div className="flex gap-2">
-                    <span className="flex items-center px-3 bg-[#080808] border border-[#202020] text-xs font-mono text-[#777777]">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      value={otpPhone}
-                      onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="9840012345"
-                      className="flex-1 bg-[#080808] border border-[#202020] px-4 py-3 text-sm text-[#F0ECE5] font-mono placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {!otpSent ? (
                   <button
                     type="button"
-                    onClick={handleSendOtp}
-                    disabled={isLoading || otpPhone.length < 10}
-                    className="w-full py-3.5 bg-[#202020] hover:bg-[#2c2c2c] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50"
+                    onClick={() => {
+                      setActiveTab('forgot');
+                      onNavigate('/forgot-password');
+                    }}
+                    className="text-xs font-sans text-[#777777] hover:text-[#BFC0C2] transition-colors"
                   >
-                    {isLoading ? 'Requesting OTP...' : 'Request One-Time Password'}
+                    Forgot Password?
                   </button>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="font-mono text-xs uppercase tracking-wider text-[#BFC0C2]">
-                          Enter 6-Digit OTP
-                        </label>
-                        {otpCountdown > 0 ? (
-                          <span className="text-[11px] font-mono text-[#777777]">
-                            Resend in {otpCountdown}s
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            className="text-[11px] font-sans text-[#BFC0C2] hover:text-[#F0ECE5] underline"
-                          >
-                            Resend OTP
-                          </button>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                        placeholder="••••••"
-                        className="w-full bg-[#080808] border border-[#202020] px-4 py-3 text-center tracking-[0.5em] text-lg font-mono text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
-                      />
-                    </div>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full bg-[#080808] border border-[#202020] pl-10 pr-10 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#777777] hover:text-[#F0ECE5]"
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
 
-                    <button
-                      type="submit"
-                      disabled={isLoading || otpCode.length < 4}
-                      className="w-full py-3.5 bg-[#651C2D] hover:bg-[#7e2338] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50"
-                    >
-                      {isLoading ? 'Authenticating...' : 'Verify OTP & Sign In'}
-                    </button>
-                  </>
-                )}
-              </form>
-            )}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-[#651C2D] w-4 h-4 bg-[#080808] border-[#202020]"
+                />
+                <label htmlFor="rememberMe" className="text-xs text-[#777777] select-none cursor-pointer">
+                  Remember my credentials on this device
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 bg-[#651C2D] hover:bg-[#7e2338] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50 mt-2"
+              >
+                {isLoading ? 'Verifying Credentials...' : 'Sign In'}
+              </button>
+            </form>
 
             <div className="border-t border-[#202020] mt-8 pt-6 space-y-4 text-center">
               <p className="text-xs text-[#777777]">
@@ -1266,17 +1148,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       </div>
                     </div>
                   </div>
-
-                  {/* Backend Integration Contract Callout */}
-                  <div className="bg-[#121212] border border-[#202020] p-5 text-xs font-sans space-y-2">
-                    <div className="flex items-center gap-2 text-amber-400 font-mono text-[11px] uppercase tracking-wider font-semibold">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Data Persistence Architecture</span>
-                    </div>
-                    <p className="text-[#777777] leading-relaxed">
-                      This customer account UI strictly avoids fabricating mock orders, fake metrics, or fake historical purchases. When backend teammate connects <code className="text-[#BFC0C2]">GET /api/account/profile</code> and <code className="text-[#BFC0C2]">GET /api/orders</code>, authentic records will hydrate here seamlessly.
-                    </p>
-                  </div>
                 </div>
               )}
 
@@ -1796,7 +1667,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
                       <Package className="w-10 h-10 text-[#777777] mx-auto opacity-50" />
                       <h3 className="font-serif text-lg text-[#F0ECE5]">No Order Records Located</h3>
                       <p className="text-xs text-[#777777] max-w-md mx-auto leading-relaxed">
-                        In accordance with the strict no-mock-data rules, past purchases will hydrate here when the customer order API (<code className="text-[#BFC0C2]">GET /api/orders</code>) is connected by the backend teammate.
+                        You have not placed any requisitions under this account yet. Your future orders and tracking history will appear here.
                       </p>
                       <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                         <button

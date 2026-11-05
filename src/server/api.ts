@@ -713,6 +713,316 @@ apiRouter.post('/orders/:orderNumber/submit-payment', upload.any(), (req: Reques
 });
 
 // =========================================================================
+// 2.5 CUSTOMER AUTHENTICATION & ACCOUNT API
+// =========================================================================
+
+// Customer Registration
+apiRouter.post('/auth/register', (req: Request, res: Response) => {
+  try {
+    const { email, phone, fullName, password } = req.body;
+    if (!email || !fullName) {
+      return res.status(400).json({ error: 'Full name and email are required.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanPhone = phone ? String(phone).replace(/[^0-9]/g, '') : null;
+
+    // Check if customer already exists
+    const existing = db
+      .prepare('SELECT id FROM customers WHERE email = ? OR (phone IS NOT NULL AND phone = ?)')
+      .get(cleanEmail, cleanPhone) as any;
+
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email or phone already exists.' });
+    }
+
+    const id = `cust_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const salt = bcrypt.genSaltSync(10);
+    const passwordHash = password ? bcrypt.hashSync(password, salt) : null;
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO customers (id, email, phone, full_name, password_hash, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, cleanEmail, cleanPhone, fullName.trim(), passwordHash, now, now);
+
+    const user = {
+      id,
+      email: cleanEmail,
+      phone: cleanPhone || '',
+      fullName: fullName.trim(),
+      membershipTier: 'NOIR_MEMBER',
+      createdAt: now,
+    };
+
+    const token = jwt.sign({ id, email: cleanEmail, role: 'CUSTOMER' }, JWT_SECRET, { expiresIn: '30d' });
+
+    res.status(201).json({
+      success: true,
+      token,
+      user,
+      message: 'Welcome to the DRAYEN Vault.',
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to create customer account: ' + err.message });
+  }
+});
+
+// Customer Login
+apiRouter.post('/auth/login', (req: Request, res: Response) => {
+  try {
+    const { email, phone, password } = req.body;
+    const identifier = (email || phone || '').trim().toLowerCase();
+
+    if (!identifier) {
+      return res.status(400).json({ error: 'Email or phone number required.' });
+    }
+
+    const customer = db
+      .prepare('SELECT * FROM customers WHERE LOWER(email) = ? OR phone = ?')
+      .get(identifier, identifier.replace(/[^0-9]/g, '')) as any;
+
+    if (!customer) {
+      return res.status(401).json({ error: 'No account found with these credentials.' });
+    }
+
+    if (customer.password_hash && password) {
+      const match = bcrypt.compareSync(password, customer.password_hash);
+      if (!match) {
+        return res.status(401).json({ error: 'Invalid password. Please check your credentials.' });
+      }
+    }
+
+    const token = jwt.sign({ id: customer.id, email: customer.email, role: 'CUSTOMER' }, JWT_SECRET, {
+      expiresIn: '30d',
+    });
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: customer.id,
+        email: customer.email,
+        phone: customer.phone || '',
+        fullName: customer.full_name,
+        membershipTier: 'NOIR_MEMBER',
+        createdAt: customer.created_at,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Authentication failed: ' + err.message });
+  }
+});
+
+// Customer Orders Lookup
+apiRouter.get('/orders/my-orders', (req: Request, res: Response) => {
+  try {
+    const { phone, token } = req.query as { phone?: string; token?: string };
+
+    if (!phone && !token) {
+      return res.status(400).json({ error: 'Customer phone number or token is required.' });
+    }
+
+    let orders: any[] = [];
+    if (phone) {
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      orders = db
+        .prepare('SELECT * FROM orders WHERE customer_phone LIKE ? ORDER BY created_at DESC')
+        .all(`%${cleanPhone}%`) as any[];
+    } else if (token) {
+      orders = db
+        .prepare('SELECT * FROM orders WHERE access_token = ? ORDER BY created_at DESC')
+        .all(token) as any[];
+    }
+
+    const mapped = orders.map((o) => {
+      const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id);
+      return {
+        ...o,
+        orderNumber: o.order_number,
+        totalPayablePaise: o.total_payable_paise,
+        totalPaise: o.total_payable_paise,
+        totalPayableINR: formatINR(o.total_payable_paise),
+        items: items.map((it: any) => ({
+          id: it.id,
+          name: it.product_name,
+          productName: it.product_name,
+          quantity: it.quantity,
+          unitPricePaise: it.unit_price_paise,
+          totalPaise: it.total_paise,
+          totalINR: formatINR(it.total_paise),
+        })),
+      };
+    });
+
+    res.json(mapped);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve orders: ' + err.message });
+  }
+});
+
+// Customer Profile GET & PUT
+apiRouter.get('/account/profile', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication token required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email?: string };
+
+    const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(decoded.id) as any;
+    if (!customer) {
+      return res.status(404).json({ error: 'Profile not found.' });
+    }
+
+    res.json({
+      id: customer.id,
+      fullName: customer.full_name,
+      email: customer.email,
+      phone: customer.phone,
+      isEmailVerified: true,
+      isMobileVerified: Boolean(customer.phone),
+      createdAt: customer.created_at,
+    });
+  } catch (err: any) {
+    res.status(401).json({ error: 'Invalid session: ' + err.message });
+  }
+});
+
+apiRouter.put('/account/profile', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication token required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const { fullName, phone } = req.body;
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE customers
+      SET full_name = COALESCE(?, full_name),
+          phone = COALESCE(?, phone),
+          updated_at = ?
+      WHERE id = ?
+    `).run(fullName ? fullName.trim() : null, phone ? String(phone).replace(/[^0-9]/g, '') : null, now, decoded.id);
+
+    const updated = db.prepare('SELECT * FROM customers WHERE id = ?').get(decoded.id) as any;
+    res.json({
+      success: true,
+      profile: {
+        id: updated.id,
+        fullName: updated.full_name,
+        email: updated.email,
+        phone: updated.phone,
+        isEmailVerified: true,
+        isMobileVerified: Boolean(updated.phone),
+        createdAt: updated.created_at,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to update profile: ' + err.message });
+  }
+});
+
+// Customer Addresses API
+apiRouter.get('/account/addresses', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication token required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+
+    const rows = db.prepare('SELECT * FROM customer_addresses WHERE customer_id = ? ORDER BY is_default DESC, created_at DESC').all(decoded.id) as any[];
+    const mapped = rows.map((r) => ({
+      id: r.id,
+      label: r.label,
+      recipientName: r.recipient_name,
+      phone: r.phone,
+      line1: r.line1,
+      line2: r.line2 || '',
+      city: r.city,
+      state: r.state,
+      postalCode: r.postal_code,
+      isDefault: Boolean(r.is_default),
+    }));
+    res.json(mapped);
+  } catch (err: any) {
+    res.status(401).json({ error: 'Failed to load addresses: ' + err.message });
+  }
+});
+
+apiRouter.post('/account/addresses', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication token required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const { label, recipientName, phone, line1, line2, city, state, postalCode, isDefault } = req.body;
+
+    if (!recipientName || !phone || !line1 || !city || !state || !postalCode) {
+      return res.status(400).json({ error: 'Required address fields missing.' });
+    }
+
+    const id = `addr_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const now = new Date().toISOString();
+
+    if (isDefault) {
+      db.prepare('UPDATE customer_addresses SET is_default = 0 WHERE customer_id = ?').run(decoded.id);
+    }
+
+    db.prepare(`
+      INSERT INTO customer_addresses (id, customer_id, label, recipient_name, phone, line1, line2, city, state, postal_code, is_default, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, decoded.id, label || 'Vault Address', recipientName.trim(), phone.trim(), line1.trim(), line2 || null, city.trim(), state.trim(), postalCode.trim(), isDefault ? 1 : 0, now);
+
+    res.status(201).json({
+      success: true,
+      address: {
+        id,
+        label: label || 'Vault Address',
+        recipientName: recipientName.trim(),
+        phone: phone.trim(),
+        line1: line1.trim(),
+        line2: line2 || '',
+        city: city.trim(),
+        state: state.trim(),
+        postalCode: postalCode.trim(),
+        isDefault: Boolean(isDefault),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to save address: ' + err.message });
+  }
+});
+
+// Analytics & Visitor Traffic Logger
+apiRouter.post('/analytics/visitor', (req: Request, res: Response) => {
+  try {
+    const { visitorId, path: pagePath, referrer } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const now = new Date().toISOString();
+    const id = `vis_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+
+    db.prepare(`
+      INSERT INTO visitor_logs (id, visitor_id, ip_address, user_agent, path, referrer, customer_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, visitorId || null, String(ip), userAgent, pagePath || '/', referrer || null, null, now);
+
+    res.json({ success: true });
+  } catch {
+    res.status(200).json({ success: true }); // Silent non-blocking analytics
+  }
+});
+
+// =========================================================================
 // 3. SECURE ADMIN PORTAL API
 // =========================================================================
 
@@ -794,6 +1104,10 @@ apiRouter.get('/admin/metrics', requireAdmin, (_req: AdminAuthRequest, res: Resp
     const salesRow = db.prepare("SELECT SUM(total_payable_paise) as sumSales FROM orders WHERE payment_status = 'Verified'").get() as any;
     const totalSalesPaise = salesRow.sumSales || 0;
 
+    // Total active customers and website visits
+    const totalCustomers = (db.prepare('SELECT COUNT(*) as count FROM customers').get() as any).count || 0;
+    const totalVisitors = (db.prepare('SELECT COUNT(*) as count FROM visitor_logs').get() as any).count || 0;
+
     res.json({
       totalOrders,
       awaitingReview,
@@ -803,6 +1117,8 @@ apiRouter.get('/admin/metrics', requireAdmin, (_req: AdminAuthRequest, res: Resp
       deliveredOrders,
       totalSalesPaise,
       totalSalesINR: formatINR(totalSalesPaise),
+      totalCustomers,
+      totalVisitors,
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Metrics calculation failed: ' + err.message });

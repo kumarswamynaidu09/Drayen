@@ -72,6 +72,7 @@ export interface AdminService {
   getShipments(filters?: { status?: string; search?: string }): Promise<{ shipments: ShipmentRecord[]; integrationState: IntegrationState }>;
   updateShipment(orderId: string, shipmentDetails: { carrier: string; trackingNumber: string; dispatchDate?: string }): Promise<{ success: boolean; message?: string; error?: string; integrationState: IntegrationState }>;
   getStoreSettings(): Promise<{ settings?: StoreSettings; integrationState: IntegrationState }>;
+  updateStoreSettings(settings: Record<string, any>): Promise<{ success: boolean; message?: string; error?: string; integrationState: IntegrationState }>;
   getIntegrationStatus(): IntegrationState;
 }
 
@@ -151,20 +152,67 @@ export const adminService: AdminService = {
     };
   },
 
-  async createProduct(_product: Partial<Product>) {
+  async createProduct(product: Partial<Product>) {
     const integration = this.getIntegrationStatus();
+    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
+
+    if (token) {
+      try {
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/products`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(product),
+        });
+        const data = await res.json();
+        return {
+          success: res.ok,
+          product: data.product,
+          error: data.error,
+          integrationState: { ...integration, status: res.ok ? 'CONNECTED' : 'ERROR' },
+        };
+      } catch (err: any) {
+        return { success: false, error: err.message, integrationState: integration };
+      }
+    }
+
     return {
       success: false,
-      error: 'Product creation requires privileged backend integration with database persistence. Teammate will connect POST /api/admin/products.',
+      error: 'Admin authentication required.',
       integrationState: integration,
     };
   },
 
-  async updateProduct(_productId: string, _changes: Partial<Product>) {
+  async updateProduct(productId: string, changes: Partial<Product>) {
     const integration = this.getIntegrationStatus();
+    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
+
+    if (token) {
+      try {
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/products/${encodeURIComponent(productId)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(changes),
+        });
+        const data = await res.json();
+        return {
+          success: res.ok,
+          error: data.error,
+          integrationState: { ...integration, status: res.ok ? 'CONNECTED' : 'ERROR' },
+        };
+      } catch (err: any) {
+        return { success: false, error: err.message, integrationState: integration };
+      }
+    }
+
     return {
       success: false,
-      error: 'Product update requires privileged backend integration. Teammate will connect PUT /api/admin/products/:id.',
+      error: 'Admin authentication required.',
       integrationState: integration,
     };
   },
@@ -418,6 +466,39 @@ export const adminService: AdminService = {
         contactPhone: '+91 98400 12345',
         supportWhatsApp: '+91 98400 12345',
       },
+      integrationState: integration,
+    };
+  },
+
+  async updateStoreSettings(settings: Record<string, any>) {
+    const integration = this.getIntegrationStatus();
+    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
+
+    if (token) {
+      try {
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(settings),
+        });
+        const data = await res.json();
+        return {
+          success: res.ok,
+          message: data.message,
+          error: data.error,
+          integrationState: { ...integration, status: res.ok ? 'CONNECTED' : 'ERROR' },
+        };
+      } catch (err: any) {
+        return { success: false, error: err.message, integrationState: integration };
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Admin authentication required.',
       integrationState: integration,
     };
   },

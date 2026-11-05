@@ -68,8 +68,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       return null;
     }
   });
-  const [loginEmail, setLoginEmail] = useState('drayenin@gmail.com');
-  const [loginPassword, setLoginPassword] = useState('jashwanth@9090');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -137,15 +137,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [formSku, setFormSku] = useState('');
   const [formCategory, setFormCategory] = useState('Pendants');
   const [formDescription, setFormDescription] = useState('');
-  const [formPriceINR, setFormPriceINR] = useState('699');
-  const [formOriginalPriceINR, setFormOriginalPriceINR] = useState('999');
-  const [formMaterial, setFormMaterial] = useState('316L Surgical Grade Steel');
-  const [formFinish, setFormFinish] = useState('Antique Silver (.925 Look)');
-  const [formChainLength, setFormChainLength] = useState('20 INCH (50CM)');
-  const [formChainThickness, setFormChainThickness] = useState('3mm Rounded Box');
-  const [formPendantDimensions, setFormPendantDimensions] = useState('42mm × 26mm');
+  const [formPriceINR, setFormPriceINR] = useState('');
+  const [formOriginalPriceINR, setFormOriginalPriceINR] = useState('');
+  const [formMaterial, setFormMaterial] = useState('');
+  const [formFinish, setFormFinish] = useState('');
+  const [formChainLength, setFormChainLength] = useState('');
+  const [formChainThickness, setFormChainThickness] = useState('');
+  const [formPendantDimensions, setFormPendantDimensions] = useState('');
   const [formImages, setFormImages] = useState('');
-  const [formStock, setFormStock] = useState('20');
+  const [formStock, setFormStock] = useState('');
   const [formIsPublished, setFormIsPublished] = useState(true);
   const [productFormError, setProductFormError] = useState<string | null>(null);
 
@@ -315,15 +315,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setFormSku(`DRY-${Math.floor(1000 + Math.random() * 9000)}`);
       setFormCategory('Pendants');
       setFormDescription('');
-      setFormPriceINR('699');
-      setFormOriginalPriceINR('999');
-      setFormMaterial('316L Surgical Grade Steel');
-      setFormFinish('Antique Silver (.925 Look)');
-      setFormChainLength('20 INCH (50CM)');
-      setFormChainThickness('3mm Rounded Box');
-      setFormPendantDimensions('42mm × 26mm');
+      setFormPriceINR('');
+      setFormOriginalPriceINR('');
+      setFormMaterial('');
+      setFormFinish('');
+      setFormChainLength('');
+      setFormChainThickness('');
+      setFormPendantDimensions('');
       setFormImages('');
-      setFormStock('20');
+      setFormStock('');
       setFormIsPublished(true);
     }
     setProductFormError(null);
@@ -364,18 +364,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </p>
           </div>
 
-          {/* Authorized Credentials Info Badge */}
-          <div className="mb-6 p-3 bg-[#141414] border border-[#222222] text-xs font-mono space-y-1">
-            <div className="flex items-center justify-between text-[#888888]">
-              <span>Authorized Administrator:</span>
-              <span className="text-[#F0ECE5] font-semibold">drayenin@gmail.com</span>
-            </div>
-            <div className="flex items-center justify-between text-[#666666] text-[11px]">
-              <span>Access Level:</span>
-              <span className="text-[#a32e49] uppercase font-bold tracking-wider">Super Administrator</span>
-            </div>
-          </div>
-
           {/* Login Form */}
           <form onSubmit={handleAdminLogin} className="space-y-4">
             {loginError && (
@@ -394,7 +382,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="drayenin@gmail.com"
+                placeholder="Enter administrator email"
                 className="w-full bg-[#141414] border border-[#2b2b2b] px-3.5 py-2.5 text-xs text-white placeholder-[#555555] focus:border-[#a32e49] focus:outline-none transition-colors font-mono"
               />
             </div>
@@ -409,7 +397,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="jashwanth@9090"
+                  placeholder="Enter security password"
                   className="w-full bg-[#141414] border border-[#2b2b2b] px-3.5 py-2.5 pr-10 text-xs text-white placeholder-[#555555] focus:border-[#a32e49] focus:outline-none transition-colors font-mono"
                 />
                 <button
@@ -1045,9 +1033,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               ) : orders.length === 0 ? (
                 <div className="bg-[#121212] border border-[#202020] p-12 text-center space-y-3">
                   <ShoppingBag className="w-8 h-8 text-[#555555] mx-auto" />
-                  <h3 className="font-serif text-xl text-[#F0ECE5]">Data Unavailable — Connect Backend</h3>
+                  <h3 className="font-serif text-xl text-[#F0ECE5]">No Orders Recorded</h3>
                   <p className="font-sans text-xs text-[#777777] max-w-md mx-auto leading-relaxed">
-                    In accordance with strict no-mock-data rules, fake orders are never fabricated. Once your teammate connects <code className="text-[#BFC0C2] bg-[#181818] px-1 py-0.5">GET /api/admin/orders</code>, authentic orders will be displayed here.
+                    No orders match your filter criteria. When customer purchases occur, orders appear here in real-time.
                   </p>
                 </div>
               ) : (
@@ -1116,16 +1104,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
               </div>
 
-              {/* Critical Policy Notice */}
-              <div className="p-4 bg-amber-950/20 border border-amber-700/50 text-xs font-mono space-y-1.5">
-                <div className="flex items-center gap-2 text-amber-400 font-bold">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>Authoritative Settlement Safeguard</span>
-                </div>
-                <p className="text-[#BFC0C2] leading-relaxed">
-                  Payment verification is unavailable until the secure backend integration is configured. The future backend must enforce administrator permissions and record payment decisions in an audit history. Frontend buttons never pretend to verify real funds.
-                </p>
-              </div>
+              {/* Pending Verifications Table */}
 
               {verificationsLoading ? (
                 <div className="p-12 text-center text-xs font-mono text-[#777777]">
@@ -1284,33 +1263,67 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {/* ======================================================== */}
           {activeTab === 'settings' && (
             <div className="space-y-6 max-w-3xl">
-              <div className="border-b border-[#202020] pb-6">
-                <span className="font-sans text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
-                  Atelier Configuration
-                </span>
-                <h1 className="font-serif text-3xl text-[#F0ECE5]">Store Settings &amp; Gateway Parameters</h1>
-                <p className="font-sans text-xs text-[#777777] mt-1">
-                  Review active store settings and identify unconfigured backend parameters.
-                </p>
+              <div className="border-b border-[#202020] pb-6 flex items-center justify-between">
+                <div>
+                  <span className="font-sans text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
+                    Atelier Configuration
+                  </span>
+                  <h1 className="font-serif text-3xl text-[#F0ECE5]">Store Settings &amp; Gateway Parameters</h1>
+                  <p className="font-sans text-xs text-[#777777] mt-1">
+                    Manage and update real-time store contact, logistics pricing, and payment UPI coordinates.
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-6">
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const target = e.currentTarget;
+                  const formData = new FormData(target);
+                  const payload: Record<string, any> = {
+                    contact_email: formData.get('contactEmail'),
+                    contact_phone: formData.get('contactPhone'),
+                    free_shipping_threshold_paise: String(Math.round(parseFloat((formData.get('freeShipping') as string) || '0') * 100)),
+                    standard_shipping_fee_paise: String(Math.round(parseFloat((formData.get('standardFee') as string) || '0') * 100)),
+                    merchant_upi_id: formData.get('merchantUpiId'),
+                    merchant_name: formData.get('merchantName'),
+                  };
+                  const res = await adminService.updateStoreSettings(payload);
+                  if (res.success) {
+                    alert('Store settings saved and updated live!');
+                    loadSettings();
+                  } else {
+                    alert('Error saving settings: ' + res.error);
+                  }
+                }}
+                className="space-y-6"
+              >
                 {/* Section 1: Contact Details */}
                 <div className="bg-[#121212] border border-[#202020] p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-lg text-[#F0ECE5]">Store Contact Coordinates</h3>
                     <span className="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-[9px] uppercase font-bold">
-                      Connected
+                      Live in Database
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Concierge Email</span>
-                      <span className="text-[#F0ECE5] font-mono">concierge@drayen.in</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Concierge Email</label>
+                      <input
+                        type="email"
+                        name="contactEmail"
+                        defaultValue={storeSettings?.contactEmail || 'concierge@drayen.in'}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Concierge Telephone</span>
-                      <span className="text-[#F0ECE5] font-mono">+91 98400 12345</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Concierge Telephone</label>
+                      <input
+                        type="text"
+                        name="contactPhone"
+                        defaultValue={storeSettings?.contactPhone || '+91 98400 12345'}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1320,17 +1333,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-lg text-[#F0ECE5]">Shipping &amp; Logistics Thresholds</h3>
                     <span className="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-[9px] uppercase font-bold">
-                      Connected
+                      Live in Database
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Free Shipping Threshold</span>
-                      <span className="text-[#F0ECE5] font-mono font-bold">₹499.00 (49,900 Paise)</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Free Shipping Qualification (₹)</label>
+                      <input
+                        type="number"
+                        name="freeShipping"
+                        defaultValue={Math.round((storeSettings?.freeShippingThresholdPaise || 49900) / 100)}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Standard Courier Charge</span>
-                      <span className="text-[#F0ECE5] font-mono font-bold">₹50.00 (5,000 Paise)</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Standard Shipping Fee (₹)</label>
+                      <input
+                        type="number"
+                        name="standardFee"
+                        defaultValue={Math.round((storeSettings?.standardShippingFeePaise || 5000) / 100)}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1340,46 +1363,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-lg text-[#F0ECE5]">Merchant UPI ID Configuration</h3>
                     <span className="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-[9px] uppercase font-bold">
-                      Active
+                      Live in Database
                     </span>
                   </div>
-                  <div className="space-y-3 text-xs font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Authoritative Merchant VPA</span>
-                      <span className="text-[#F0ECE5] font-mono font-bold select-all">drayen.atelier@okaxis</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Authoritative Merchant VPA (UPI ID)</label>
+                      <input
+                        type="text"
+                        name="merchantUpiId"
+                        defaultValue={storeSettings?.merchantUpiId || 'drayen.atelier@okaxis'}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                     <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Payee Legal Name</span>
-                      <span className="text-[#F0ECE5]">DRAYEN ATELIER</span>
-                    </div>
-                    <div>
-                      <span className="text-[#777777] block text-[10px] uppercase">Dynamic QR Payload Protocol</span>
-                      <span className="text-emerald-400 font-mono text-[11px]">upi://pay?pa=...&cu=INR&am=... (Active)</span>
+                      <label className="text-[#777777] block text-[10px] uppercase mb-1">Payee Legal Name</label>
+                      <input
+                        type="text"
+                        name="merchantName"
+                        defaultValue={storeSettings?.merchantName || 'DRAYEN ATELIER'}
+                        className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Section 4: Return Policy */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-2 text-xs font-sans">
-                  <h3 className="font-serif text-lg text-[#F0ECE5]">Return &amp; Exchange Warranty</h3>
-                  <p className="text-[#777777]">
-                    7-Day complimentary exchange policy. Lifetime tarnish-proof replacement guarantee on certified 316L hypoallergenic marine stainless steel.
-                  </p>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-[#651C2D] hover:bg-[#85253b] text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
+                  >
+                    Save All Settings to Database
+                  </button>
                 </div>
-
-                {/* Section 5: Order Notifications */}
-                <div className="bg-[#121212] border border-[#202020] p-6 space-y-3 text-xs font-sans">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg text-[#F0ECE5]">Order Notification Services</h3>
-                    <span className="px-2 py-0.5 bg-amber-950/60 text-amber-400 border border-amber-800 text-[9px] uppercase font-bold">
-                      Backend Required
-                    </span>
-                  </div>
-                  <p className="text-[#777777]">
-                    WhatsApp Business API webhook and transactional email dispatcher require backend credentials. Secrets are never stored in client code.
-                  </p>
-                </div>
-              </div>
+              </form>
             </div>
           )}
 
@@ -1409,15 +1426,53 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </button>
             </div>
 
-            {/* Unconfigured Notice */}
-            <div className="p-3 bg-amber-950/20 border border-amber-700/40 text-amber-300 text-xs font-mono">
-              Notice: Product persistence calls <code className="text-white">adminService.createProduct()</code>. Saving is disabled until the backend database is connected.
-            </div>
-
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                setProductFormError('Saving is disabled until the secure backend integration is configured. Teammate will connect POST /api/admin/products.');
+                setProductFormError(null);
+                try {
+                  const sellingPricePaise = Math.round(parseFloat(formPriceINR || '0') * 100);
+                  const originalPricePaise = formOriginalPriceINR ? Math.round(parseFloat(formOriginalPriceINR) * 100) : null;
+                  const imagesArray = formImages
+                    .split('\n')
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+
+                  const productPayload = {
+                    name: formName.trim(),
+                    sku: formSku.trim(),
+                    category: formCategory,
+                    selling_price_paise: sellingPricePaise,
+                    original_price_paise: originalPricePaise,
+                    short_description: formDescription.trim(),
+                    full_description: formDescription.trim(),
+                    material: formMaterial.trim(),
+                    finish: formFinish.trim(),
+                    chain_length: formChainLength.trim() || undefined,
+                    chain_thickness: formChainThickness.trim() || undefined,
+                    pendant_height: formPendantDimensions.trim() || undefined,
+                    images: imagesArray,
+                    stock_quantity: parseInt(formStock || '0', 10),
+                    is_published: formIsPublished ? 1 : 0,
+                  };
+
+                  let res;
+                  if (productFormMode === 'create') {
+                    res = await adminService.createProduct(productPayload as any);
+                  } else if (selectedProduct) {
+                    res = await adminService.updateProduct(selectedProduct.id, productPayload as any);
+                  }
+
+                  if (res && res.success) {
+                    setIsProductModalOpen(false);
+                    loadProducts();
+                    loadInventory();
+                  } else {
+                    setProductFormError(res?.error || 'Failed to save product to database.');
+                  }
+                } catch (err: any) {
+                  setProductFormError(err.message || 'Error occurred while saving product.');
+                }
               }}
               className="space-y-4 text-xs font-sans"
             >
@@ -1591,11 +1646,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled
-                  title="Backend integration required"
-                  className="px-6 py-2.5 bg-[#651C2D]/40 text-[#777777] text-xs uppercase tracking-widest font-bold cursor-not-allowed"
+                  className="px-6 py-2.5 bg-[#651C2D] hover:bg-[#85253b] text-white text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
                 >
-                  Save Artifact (Backend Required)
+                  {productFormMode === 'create' ? 'Save Product to Database' : 'Update Product'}
                 </button>
               </div>
             </form>
