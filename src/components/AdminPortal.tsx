@@ -883,20 +883,67 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               isLoading={productsLoading}
               onRefresh={loadProducts}
               onSeed={async () => {
-                const token = sessionStorage.getItem('drayen_admin_token');
-                const res = await fetch('/api/admin/seed', {
-                  method: 'POST',
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                if (res.ok) {
-                   console.log('Catalogue seeded successfully.');
-                   loadProducts();
-                } else {
-                   console.log('Failed to seed catalogue.');
-                }
+                alert('Mock seeding has been permanently disabled. Add genuine items using the "+ ADD NEW PRODUCT" button.');
               }}
-              onShowToast={(msg) => console.log('Toast:', msg)}
+              onShowToast={(msg) => alert(msg)}
               authFetch={async (url, options) => {
+                const method = options?.method?.toUpperCase() || 'GET';
+                const body = options?.body ? JSON.parse(options.body as string) : {};
+
+                // Route DELETE
+                if (method === 'DELETE' && url.includes('/api/admin/products/')) {
+                  const id = url.split('/').pop() || '';
+                  const res = await adminService.deleteProduct(id);
+                  if (!res.success) {
+                    return new Response(JSON.stringify({ error: res.error }), { status: 400 });
+                  }
+                  return new Response(JSON.stringify({ message: 'Product deleted successfully' }), { status: 200 });
+                }
+
+                // Route POST (Create)
+                if (method === 'POST' && url === '/api/admin/products') {
+                  const res = await adminService.createProduct(body);
+                  if (!res.success) {
+                    return new Response(JSON.stringify({ error: res.error }), { status: 400 });
+                  }
+                  return new Response(JSON.stringify({ message: 'Product created', product: res.product }), { status: 200 });
+                }
+
+                // Route PUT (Update)
+                if (method === 'PUT' && url.includes('/api/admin/products/')) {
+                  const id = url.split('/').pop() || '';
+                  const res = await adminService.updateProduct(id, body);
+                  if (!res.success) {
+                    return new Response(JSON.stringify({ error: res.error }), { status: 400 });
+                  }
+                  return new Response(JSON.stringify({ message: 'Product updated' }), { status: 200 });
+                }
+
+                // Route PATCH stock
+                if (method === 'PATCH' && url.includes('/stock')) {
+                  const id = url.split('/')[4] || '';
+                  const res = await adminService.updateInventory(id, body.stockQuantity);
+                  if (!res.success) {
+                    return new Response(JSON.stringify({ error: res.error }), { status: 400 });
+                  }
+                  return new Response(JSON.stringify({ message: 'Stock updated' }), { status: 200 });
+                }
+
+                // Route POST bulk
+                if (method === 'POST' && url.includes('/bulk')) {
+                  const { action, ids } = body;
+                  if (action === 'delete') {
+                    for (const id of ids) {
+                      await adminService.deleteProduct(id);
+                    }
+                  } else if (action === 'publish' || action === 'draft') {
+                    for (const id of ids) {
+                      await adminService.updateProduct(id, { is_published: action === 'publish' });
+                    }
+                  }
+                  return new Response(JSON.stringify({ message: 'Bulk action completed' }), { status: 200 });
+                }
+
                 const token = sessionStorage.getItem('drayen_admin_token');
                 return fetch(url, {
                   ...options,

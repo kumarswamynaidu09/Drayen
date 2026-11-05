@@ -504,15 +504,6 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={onSeed}
-            className="px-3.5 py-2 bg-[#1b1919] hover:bg-[#252323] border border-[#2d2929] text-xs font-mono text-[#c7c3c2] hover:text-white transition-colors flex items-center gap-2"
-            title="Populate authentic DRAYEN collection into SQLite database"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Seed Catalog</span>
-          </button>
-
-          <button
             onClick={exportToCSV}
             className="px-3 py-2 bg-[#171616] hover:bg-[#201f1f] border border-[#2d2929] text-xs font-mono text-[#858281] hover:text-white transition-colors flex items-center gap-1.5"
             title="Download CSV export"
