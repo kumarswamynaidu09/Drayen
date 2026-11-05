@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem, Address, Customer, CheckoutRequest } from '../types';
 import { checkoutService } from '../services/checkout';
 import { paymentsService } from '../services/payments';
+import { authService } from '../services/auth';
 import { config } from '../services/config';
 import { formatINR } from '../lib/money';
 import { validateIndianPinCode, validateIndianMobile } from '../lib/validation';
@@ -20,7 +21,11 @@ import {
   Package, 
   Printer, 
   ShoppingBag,
-  ExternalLink
+  ExternalLink,
+  Lock,
+  UserCheck,
+  Eye,
+  RefreshCw
 } from 'lucide-react';
 
 export type CheckoutStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -44,6 +49,28 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 }) => {
   // Step state
   const [currentStep, setCurrentStep] = useState<CheckoutStep>(1);
+
+  // Auth Gate for Checkout
+  const [authenticatedUser, setAuthenticatedUser] = useState<Customer | null>(authService.getCurrentUser());
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authFullName, setAuthFullName] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Sync authenticated user on mount
+  useEffect(() => {
+    const user = authService.getCurrentUser();
+    if (user) {
+      setAuthenticatedUser(user);
+      setContactEmailOrPhone(user.email || user.phone || '');
+      setFullName(`${user.firstName} ${user.lastName || ''}`.trim());
+      if (user.phone) setPhone(user.phone);
+    }
+  }, []);
 
   // Step 1: Contact
   const [contactEmailOrPhone, setContactEmailOrPhone] = useState('');
@@ -494,17 +521,219 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           {/* LEFT COLUMN: ACTIVE STEP */}
           <div className={currentStep === 7 ? 'lg:col-span-12' : 'lg:col-span-7 space-y-6'}>
             
-            {/* STEP 1: CONTACT DETAILS */}
-            {currentStep === 1 && (
+            {/* STEP 1: AUTHENTICATION LOCK / CONTACT DETAILS */}
+            {currentStep === 1 && !authenticatedUser && (
+              <div className="bg-[#121212] border border-[#262626] p-6 md:p-8 space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#651C2D] via-[#a32e49] to-[#651C2D]" />
+                
+                <div className="border-b border-[#202020] pb-4 flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
+                      Vault Security Gate • Step 01 / 07
+                    </span>
+                    <h2 className="font-serif text-2xl md:text-3xl text-[#F0ECE5]">
+                      {authMode === 'login' ? 'Patron Authentication' : 'Create Patron Account'}
+                    </h2>
+                    <p className="font-sans text-xs text-[#777777] mt-1">
+                      {authMode === 'login' 
+                        ? 'Sign in to access your saved vault addresses, discounts, and dispatch orders.'
+                        : 'Register your patron credentials to link your order history and track shipments.'}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-[#161616] border border-[#2b2b2b] flex items-center justify-center text-[#a32e49]">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Tab switch: Sign In vs Sign Up */}
+                <div className="grid grid-cols-2 border border-[#252525] bg-[#161616] p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setAuthError(null);
+                    }}
+                    className={`py-2 text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer ${
+                      authMode === 'login' ? 'bg-[#651C2D] text-white font-bold' : 'text-[#888888] hover:text-white'
+                    }`}
+                  >
+                    Patron Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setAuthError(null);
+                    }}
+                    className={`py-2 text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer ${
+                      authMode === 'signup' ? 'bg-[#651C2D] text-white font-bold' : 'text-[#888888] hover:text-white'
+                    }`}
+                  >
+                    New Patron Registration
+                  </button>
+                </div>
+
+                {authError && (
+                  <div className="p-3 bg-red-950/60 border border-red-800 text-red-200 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setAuthError(null);
+                    setAuthLoading(true);
+                    try {
+                      if (authMode === 'login') {
+                        const res = await authService.signIn({
+                          email: authEmail.trim(),
+                          password: authPassword,
+                        });
+                        if (res.success && res.user) {
+                          setAuthenticatedUser(res.user);
+                          setContactEmailOrPhone(res.user.email || '');
+                          setFullName(`${res.user.firstName} ${res.user.lastName || ''}`.trim());
+                          if (res.user.phone) setPhone(res.user.phone);
+                        } else {
+                          setAuthError(res.error || 'Authentication rejected. Please check email/password.');
+                        }
+                      } else {
+                        if (!authFullName.trim()) {
+                          setAuthError('Please enter your full custodian name.');
+                          return;
+                        }
+                        const res = await authService.signUp({
+                          fullName: authFullName.trim(),
+                          email: authEmail.trim(),
+                          phone: authPhone.trim(),
+                          password: authPassword,
+                          consentAgreed: true,
+                        });
+                        if (res.success && res.user) {
+                          setAuthenticatedUser(res.user);
+                          setContactEmailOrPhone(res.user.email || '');
+                          setFullName(authFullName.trim());
+                          if (authPhone.trim()) setPhone(authPhone.trim());
+                        } else {
+                          setAuthError(res.error || 'Registration rejected.');
+                        }
+                      }
+                    } catch (err: any) {
+                      setAuthError(err.message || 'Error communicating with security system.');
+                    } finally {
+                      setAuthLoading(false);
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  {authMode === 'signup' && (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#888888]">
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={authFullName}
+                        onChange={(e) => setAuthFullName(e.target.value)}
+                        placeholder="e.g. Aarav Sharma"
+                        className="w-full bg-[#161616] border border-[#2b2b2b] px-3.5 py-2.5 text-xs text-white focus:border-[#651C2D] focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-mono uppercase tracking-wider text-[#888888]">
+                      Patron Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="patron@drayen.in"
+                      className="w-full bg-[#161616] border border-[#2b2b2b] px-3.5 py-2.5 text-xs text-white focus:border-[#651C2D] focus:outline-none font-mono"
+                    />
+                  </div>
+
+                  {authMode === 'signup' && (
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#888888]">
+                        Mobile Telephone (for dispatch updates)
+                      </label>
+                      <input
+                        type="tel"
+                        value={authPhone}
+                        onChange={(e) => setAuthPhone(e.target.value)}
+                        placeholder="9840012345"
+                        className="w-full bg-[#161616] border border-[#2b2b2b] px-3.5 py-2.5 text-xs text-white focus:border-[#651C2D] focus:outline-none font-mono"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-mono uppercase tracking-wider text-[#888888]">
+                      Security Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="Enter password"
+                        className="w-full bg-[#161616] border border-[#2b2b2b] px-3.5 py-2.5 pr-10 text-xs text-white focus:border-[#651C2D] focus:outline-none font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777777] hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full py-3 bg-[#651C2D] hover:bg-[#85253b] text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                  >
+                    {authLoading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Verifying Credentials...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        <span>{authMode === 'login' ? 'Sign In & Unlock Checkout' : 'Register & Unlock Checkout'}</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* STEP 1: CONTACT DETAILS (UNLOCKED ONCE AUTHENTICATED) */}
+            {currentStep === 1 && authenticatedUser && (
               <div className="bg-[#121212] border border-[#202020] p-6 md:p-8 space-y-6">
-                <div className="border-b border-[#202020] pb-4">
-                  <span className="font-sans text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
-                    Step 01 / 07
-                  </span>
-                  <h2 className="font-serif text-2xl md:text-3xl text-[#F0ECE5]">Contact & Custodian Credentials</h2>
-                  <p className="font-sans text-xs text-[#777777] mt-1">
-                    Order confirmation receipts and courier tracking credentials will be dispatched here.
-                  </p>
+                <div className="border-b border-[#202020] pb-4 flex items-center justify-between">
+                  <div>
+                    <span className="font-sans text-xs uppercase tracking-widest text-[#651C2D] font-bold block mb-1">
+                      Step 01 / 07 • Verified Patron
+                    </span>
+                    <h2 className="font-serif text-2xl md:text-3xl text-[#F0ECE5]">Contact & Custodian Credentials</h2>
+                    <p className="font-sans text-xs text-[#777777] mt-1">
+                      Order confirmation receipts and courier tracking credentials will be dispatched here.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-mono text-[11px] uppercase">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>{authenticatedUser.firstName}</span>
+                  </div>
                 </div>
 
                 <form onSubmit={handleProceedFromContact} className="space-y-4">
@@ -537,7 +766,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
                   <div className="pt-4 border-t border-[#202020] flex items-center justify-between">
                     <span className="font-sans text-xs text-[#777777]">
-                      Checking out as verified guest
+                      Authenticated Patron: <strong className="text-white">{authenticatedUser.email}</strong>
                     </span>
                     <button
                       type="submit"
