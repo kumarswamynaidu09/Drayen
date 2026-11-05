@@ -154,6 +154,39 @@ export const adminService: AdminService = {
 
   async createProduct(product: Partial<Product>) {
     const integration = this.getIntegrationStatus();
+
+    // 1. Direct Supabase Storage
+    try {
+      const { supabase, isSupabaseConfigured } = await import('../lib/supabase');
+      if (isSupabaseConfigured) {
+        const payload = {
+          name: product.name,
+          sku: product.sku,
+          slug: (product.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          short_description: product.short_description,
+          full_description: product.full_description,
+          category: product.category || 'Pendants',
+          selling_price_paise: product.selling_price_paise || 0,
+          original_price_paise: product.original_price_paise || null,
+          material: product.material || '',
+          finish: product.finish || '',
+          chain_length: product.chain_length || '',
+          chain_thickness: product.chain_thickness || '',
+          pendant_height: product.pendant_height || '',
+          images: product.images || [],
+          stock_quantity: product.stock_quantity || 0,
+          is_published: product.is_published ?? true,
+        };
+
+        const { data, error } = await supabase.from('products').insert([payload]).select().single();
+        if (!error && data) {
+          return { success: true, product: data as any, integrationState: { ...integration, status: 'CONNECTED' } };
+        }
+      }
+    } catch (err) {
+      console.warn('[AdminService] Supabase direct product insert notice:', err);
+    }
+
     const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('drayen_admin_token') : null;
 
     if (token) {
