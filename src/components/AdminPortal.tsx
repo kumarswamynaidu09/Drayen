@@ -225,6 +225,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     } else if (activeTab === 'settings') {
       loadSettings();
     }
+
+    // Connect Realtime Websocket Subscription across tables
+    const unsubscribe = adminService.subscribeRealtime((event, payload) => {
+      console.log('[Admin Realtime]', event, payload);
+      loadOverview();
+      if (activeTab === 'products' || activeTab === 'inventory') {
+        loadProducts();
+        loadInventory();
+      } else if (activeTab === 'orders') {
+        loadOrders();
+      } else if (activeTab === 'payments') {
+        loadPayments();
+      } else if (activeTab === 'shipments') {
+        loadShipments();
+      } else if (activeTab === 'settings') {
+        loadSettings();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [activeTab, authToken]);
 
   const loadOverview = async () => {
