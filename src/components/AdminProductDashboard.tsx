@@ -24,7 +24,9 @@ import {
   X,
   TrendingUp,
   Tag,
-  DollarSign
+  DollarSign,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export interface ProductItem {
@@ -284,28 +286,28 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
     setModalMode('create');
     setModalTab('general');
     setEditingProduct({
-      sku: `DRY-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: '',
       name: '',
       slug: '',
       category: 'Pendants',
-      selling_price_paise: 199000,
-      original_price_paise: 249000,
-      material: '316L Stainless Steel',
-      finish: 'Oxidized Matte Gunmetal',
-      chain_length: '55 cm (Adjustable to 60 cm)',
-      chain_thickness: '3.5 mm Cuban link',
-      pendant_height: '42 mm',
-      pendant_width: '24 mm',
-      pendant_thickness: '4 mm',
-      pendant_weight: '28 g',
-      clasp_type: 'Reinforced Lobster Clasp',
+      selling_price_paise: 0,
+      original_price_paise: null,
+      material: '',
+      finish: '',
+      chain_length: '',
+      chain_thickness: '',
+      pendant_height: '',
+      pendant_width: '',
+      pendant_thickness: '',
+      pendant_weight: '',
+      clasp_type: '',
       is_detachable: 1,
-      short_description: 'Forged in surgical steel with gothic oxidized finish.',
-      full_description: 'An architectural gothic talisman sculpted from medical-grade 316L stainless steel. Hypoallergenic, sweat-resistant, and immune to tarnishing.',
-      care_instructions: 'Rinse with warm fresh water if exposed to saltwater. Buff with microfiber cloth.',
-      stock_quantity: 12,
+      short_description: '',
+      full_description: '',
+      care_instructions: '',
+      stock_quantity: 0,
       is_published: 1,
-      images: [PRESET_IMAGES[0]]
+      images: []
     });
     setIsEditModalOpen(true);
   };
@@ -1329,13 +1331,14 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                         type="number"
                         min="1"
                         required
-                        value={Math.round((editingProduct.selling_price_paise || 0) / 100)}
+                        value={editingProduct.selling_price_paise ? Math.round(editingProduct.selling_price_paise / 100) : ''}
                         onChange={(e) =>
                           setEditingProduct({
                             ...editingProduct,
-                            selling_price_paise: Math.round(Number(e.target.value) * 100)
+                            selling_price_paise: e.target.value === '' ? 0 : Math.round(Number(e.target.value) * 100)
                           })
                         }
+                        placeholder="e.g. 1999"
                         className="w-full bg-[#181717] border border-[#2d2929] px-4 py-2.5 text-sm text-white font-mono focus:border-[#651C2D] focus:outline-none"
                       />
                       <p className="text-[11px] text-[#858281] mt-1 font-mono">
@@ -1354,7 +1357,7 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                         onChange={(e) =>
                           setEditingProduct({
                             ...editingProduct,
-                            original_price_paise: e.target.value ? Math.round(Number(e.target.value) * 100) : null
+                            original_price_paise: e.target.value === '' ? null : Math.round(Number(e.target.value) * 100)
                           })
                         }
                         placeholder="Leave blank for regular pricing"
@@ -1377,11 +1380,12 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                         type="number"
                         min="0"
                         required
-                        value={editingProduct.stock_quantity ?? 10}
+                        value={editingProduct.stock_quantity !== undefined && editingProduct.stock_quantity !== 0 ? editingProduct.stock_quantity : (editingProduct.stock_quantity === 0 ? '' : '')}
+                        placeholder="0"
                         onChange={(e) =>
                           setEditingProduct({
                             ...editingProduct,
-                            stock_quantity: Math.max(0, parseInt(e.target.value, 10) || 0)
+                            stock_quantity: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0)
                           })
                         }
                         className="w-full bg-[#181717] border border-[#2d2929] px-4 py-2.5 text-sm text-white font-mono focus:border-[#651C2D] focus:outline-none"
@@ -1537,55 +1541,69 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
 
               {/* TAB 4: IMAGES & VISUALS */}
               {modalTab === 'media' && (
-                <div className="space-y-4">
+                <div className="space-y-5">
+                  {/* Local Image File Upload Area */}
+                  <div className="p-4 bg-[#181717] border border-dashed border-[#3d3939] hover:border-[#651C2D] transition-colors">
+                    <label className="flex flex-col items-center justify-center cursor-pointer text-center p-3">
+                      <Upload className="w-6 h-6 text-[#a32e49] mb-2" />
+                      <span className="font-mono text-xs uppercase tracking-wider text-white font-bold block">
+                        Upload Product Images
+                      </span>
+                      <span className="text-[11px] text-[#858281] mt-1 block">
+                        Select JPG, PNG, WEBP from your device (multiple files supported)
+                      </span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (!files || files.length === 0) return;
+                          Array.from(files).forEach((file) => {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const base64Url = event.target?.result as string;
+                              if (base64Url) {
+                                setEditingProduct((prev) => ({
+                                  ...prev,
+                                  images: [...(prev?.images || []), base64Url]
+                                }));
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  </div>
+
                   <div>
                     <label className="block font-mono text-xs uppercase tracking-widest text-[#858281] mb-1">
-                      Image URLs (One URL per line)
+                      Or Paste Image URLs (One URL per line)
                     </label>
                     <textarea
-                      rows={3}
-                      value={(editingProduct.images || []).join('\n')}
-                      onChange={(e) =>
+                      rows={2}
+                      value={(editingProduct.images || []).filter(img => !img.startsWith('data:')).join('\n')}
+                      onChange={(e) => {
+                        const urls = e.target.value.split('\n').map((s) => s.trim()).filter(Boolean);
+                        const uploadedDataUrls = (editingProduct.images || []).filter(img => img.startsWith('data:'));
                         setEditingProduct({
                           ...editingProduct,
-                          images: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean)
-                        })
-                      }
+                          images: [...uploadedDataUrls, ...urls]
+                        });
+                      }}
                       placeholder="https://images.unsplash.com/photo-..."
                       className="w-full bg-[#181717] border border-[#2d2929] px-4 py-2.5 text-xs text-white font-mono focus:border-[#651C2D] focus:outline-none"
                     />
                   </div>
 
-                  <div>
-                    <span className="font-mono text-xs uppercase tracking-widest text-[#858281] block mb-2">
-                      Preset High-Resolution Visuals (Click to add)
-                    </span>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                      {PRESET_IMAGES.map((url, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            const cur = editingProduct.images || [];
-                            if (!cur.includes(url)) {
-                              setEditingProduct({ ...editingProduct, images: [...cur, url] });
-                            }
-                          }}
-                          className="relative aspect-square border border-[#2d2929] hover:border-[#651C2D] overflow-hidden group"
-                        >
-                          <img src={url} alt={`Preset ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-mono">
-                            + Add
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
+                  {/* Configured Previews */}
                   {editingProduct.images && editingProduct.images.length > 0 && (
                     <div>
                       <span className="font-mono text-xs uppercase tracking-widest text-white block mb-2">
-                        Configured Image Previews ({editingProduct.images.length})
+                        Attached Images ({editingProduct.images.length})
                       </span>
                       <div className="flex flex-wrap gap-3">
                         {editingProduct.images.map((img, i) => (
@@ -1597,10 +1615,16 @@ export const AdminProductDashboard: React.FC<AdminProductDashboardProps> = ({
                                 const updated = (editingProduct.images || []).filter((_, idx) => idx !== i);
                                 setEditingProduct({ ...editingProduct, images: updated });
                               }}
-                              className="absolute top-1 right-1 bg-red-950/80 text-white w-4 h-4 flex items-center justify-center text-[10px]"
+                              className="absolute top-1 right-1 bg-red-950/80 hover:bg-red-800 text-white w-4 h-4 flex items-center justify-center text-[10px] cursor-pointer"
+                              title="Remove image"
                             >
                               ✕
                             </button>
+                            {i === 0 && (
+                              <span className="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] font-mono uppercase text-center text-amber-300 py-0.5">
+                                Primary
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>
