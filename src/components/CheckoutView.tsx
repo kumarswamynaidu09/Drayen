@@ -4,6 +4,7 @@ import { checkoutService } from '../services/checkout';
 import { paymentsService } from '../services/payments';
 import { authService } from '../services/auth';
 import { config } from '../services/config';
+import { adminService } from '../services/admin';
 import { formatINR } from '../lib/money';
 import { validateIndianPinCode, validateIndianMobile } from '../lib/validation';
 import { 
@@ -70,7 +71,25 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       setFullName(`${user.firstName} ${user.lastName || ''}`.trim());
       if (user.phone) setPhone(user.phone);
     }
+
+    // Load store payment & QR settings from Supabase
+    adminService.getStoreSettings().then((res) => {
+      if (res?.settings) {
+        if (res.settings.merchantUpiId) setDynamicUpiId(res.settings.merchantUpiId);
+        if (res.settings.merchantName) setDynamicMerchantName(res.settings.merchantName);
+        if (res.settings.merchantQrUrl) setDynamicQrUrl(res.settings.merchantQrUrl);
+        setDynamicQrEnabled(res.settings.merchantQrEnabled);
+        if (res.settings.paymentInstructions) setDynamicInstructions(res.settings.paymentInstructions);
+      }
+    }).catch(console.warn);
   }, []);
+
+  // Live Gateway Settings from Supabase
+  const [dynamicUpiId, setDynamicUpiId] = useState(config.merchantUpiId || 'drayen.atelier@okaxis');
+  const [dynamicMerchantName, setDynamicMerchantName] = useState(config.merchantName || 'DRAYEN ATELIER');
+  const [dynamicQrUrl, setDynamicQrUrl] = useState(config.merchantQrUrl || '');
+  const [dynamicQrEnabled, setDynamicQrEnabled] = useState(true);
+  const [dynamicInstructions, setDynamicInstructions] = useState('');
 
   // Step 1: Contact
   const [contactEmailOrPhone, setContactEmailOrPhone] = useState('');
@@ -1257,40 +1276,49 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 </div>
 
                 {/* QR Code and Transfer Coordinates */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-[#181818] border border-[#202020]">
-                  <div className="flex flex-col items-center justify-center p-4 bg-[#121212] border border-[#202020]">
-                    <div className="p-3 bg-white">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                          `upi://pay?pa=${config.merchantUpiId}&pn=${encodeURIComponent(
-                            config.merchantName
-                          )}&am=${(adjustedTotalPaise / 100).toFixed(2)}&cu=INR&tn=${encodeURIComponent(
-                            `Order ${createdOrderNumber}`
-                          )}`
-                        )}`}
-                        alt="Merchant UPI QR"
-                        className="w-44 h-44 object-contain"
-                      />
+                <div className={`grid grid-cols-1 ${dynamicQrEnabled ? 'md:grid-cols-2' : ''} gap-6 p-5 bg-[#181818] border border-[#202020]`}>
+                  {dynamicQrEnabled && (
+                    <div className="flex flex-col items-center justify-center p-4 bg-[#121212] border border-[#202020]">
+                      <div className="p-3 bg-white">
+                        <img
+                          src={dynamicQrUrl || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                            `upi://pay?pa=${dynamicUpiId}&pn=${encodeURIComponent(
+                              dynamicMerchantName
+                            )}&am=${(adjustedTotalPaise / 100).toFixed(2)}&cu=INR&tn=${encodeURIComponent(
+                              `Order ${createdOrderNumber}`
+                            )}`
+                          )}`}
+                          alt="Merchant UPI QR"
+                          className="w-44 h-44 object-contain"
+                        />
+                      </div>
+                      <p className="font-sans text-[11px] text-[#777777] mt-2 text-center">
+                        Authoritative Payee: <strong className="text-[#F0ECE5]">{dynamicMerchantName}</strong>
+                      </p>
                     </div>
-                    <p className="font-sans text-[11px] text-[#777777] mt-2 text-center">
-                      Authoritative Payee: <strong className="text-[#F0ECE5]">{config.merchantName}</strong>
-                    </p>
-                  </div>
+                  )}
 
                   <div className="space-y-3 font-sans text-xs flex flex-col justify-center">
                     <div className="bg-[#121212] p-3 border border-[#202020] flex items-center justify-between">
                       <div>
                         <span className="text-[10px] uppercase text-[#777777] block">Merchant UPI ID</span>
-                        <span className="text-[#F0ECE5] font-bold select-all">{config.merchantUpiId}</span>
+                        <span className="text-[#F0ECE5] font-bold select-all">{dynamicUpiId}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopyText(config.merchantUpiId, 'upi')}
+                        onClick={() => handleCopyText(dynamicUpiId, 'upi')}
                         className="px-2.5 py-1 bg-[#202020] hover:bg-[#2d2929] text-[#F0ECE5] text-[11px] flex items-center gap-1"
                       >
                         {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
                       </button>
+                    </div>
+
+                    <div className="bg-[#121212] p-3 border border-[#202020] flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] uppercase text-[#777777] block">Payee Legal Name</span>
+                        <span className="text-[#F0ECE5] font-bold select-all">{dynamicMerchantName}</span>
+                      </div>
                     </div>
 
                     <div className="bg-[#121212] p-3 border border-[#202020] flex items-center justify-between">
@@ -1309,6 +1337,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                         <span>{copiedAmount ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
+
+                    {dynamicInstructions && (
+                      <div className="p-3 bg-[#121212] border-l-2 border-emerald-500 text-[11px] text-[#BFC0C2] space-y-1">
+                        <p className="font-bold text-[#F0ECE5]">Atelier Remittance Instructions:</p>
+                        <p className="whitespace-pre-line">{dynamicInstructions}</p>
+                      </div>
+                    )}
 
                     <div className="p-3 bg-[#121212] border-l-2 border-[#651C2D] text-[11px] text-[#BFC0C2] space-y-1">
                       <p className="font-bold text-[#F0ECE5]">Important Note:</p>

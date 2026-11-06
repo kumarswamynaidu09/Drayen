@@ -316,6 +316,36 @@ export const adminService: AdminService = {
     return { success: false, error: 'Database connection unavailable', integrationState: integration };
   },
 
+  async updateOrderStatus(orderId: string, orderStatus: string, paymentStatus?: string) {
+    const integration = this.getIntegrationStatus();
+
+    if (isSupabaseConfigured) {
+      try {
+        const updatePayload: Record<string, any> = {
+          order_status: orderStatus,
+          updated_at: new Date().toISOString(),
+        };
+        if (paymentStatus) {
+          updatePayload.payment_status = paymentStatus;
+        }
+
+        const { error } = await supabase
+          .from('orders')
+          .update(updatePayload)
+          .eq('id', orderId);
+
+        if (!error) {
+          return { success: true, message: 'Order status updated successfully.', integrationState: { ...integration, status: 'CONNECTED' } };
+        }
+        return { success: false, error: error.message, integrationState: integration };
+      } catch (err: any) {
+        return { success: false, error: err.message, integrationState: integration };
+      }
+    }
+
+    return { success: false, error: 'Database connection unavailable', integrationState: integration };
+  },
+
   async getOrders(filters?: { status?: string; search?: string }) {
     const integration = this.getIntegrationStatus();
 
@@ -556,7 +586,8 @@ export const adminService: AdminService = {
               merchantUpiId: map.merchant_upi_id || 'drayen.atelier@okaxis',
               merchantName: map.merchant_name || 'DRAYEN ATELIER',
               merchantQrUrl: map.merchant_qr_url || '',
-              merchantQrEnabled: map.merchant_qr_enabled === '1',
+              merchantQrEnabled: map.merchant_qr_enabled !== '0',
+              paymentInstructions: map.payment_instructions || '',
               freeShippingThresholdPaise: parseInt(map.free_shipping_threshold_paise || '49900', 10),
               standardShippingFeePaise: parseInt(map.standard_shipping_fee_paise || '5000', 10),
               contactEmail: map.contact_email || 'concierge@drayen.in',
@@ -577,6 +608,7 @@ export const adminService: AdminService = {
         merchantName: config.merchantName || 'DRAYEN ATELIER',
         merchantQrUrl: config.merchantQrUrl,
         merchantQrEnabled: true,
+        paymentInstructions: '',
         freeShippingThresholdPaise: config.freeShippingThresholdPaise || 49900,
         standardShippingFeePaise: config.standardShippingFeePaise || 5000,
         contactEmail: 'concierge@drayen.in',

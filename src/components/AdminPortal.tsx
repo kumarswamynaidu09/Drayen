@@ -187,6 +187,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [orderSearch, setOrderSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+  const [orderActionMsg, setOrderActionMsg] = useState<string | null>(null);
+
+  // Screen 7: Store Settings local QR state
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [qrCodeFileError, setQrCodeFileError] = useState<string | null>(null);
 
   // Screen 5: Payment Verification
   const [verifications, setVerifications] = useState<PendingPaymentRecord[]>([]);
@@ -1281,14 +1287,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               }}
                               className="px-3 py-1 bg-[#181818] hover:bg-[#202020] text-[#BFC0C2] hover:text-[#F0ECE5] text-[11px] uppercase tracking-wider"
                             >
-                              View Screenshot
+                              View Proof
                             </button>
                             <button
-                              disabled
-                              title="Payment verification is unavailable until secure backend integration is configured"
-                              className="px-3 py-1 bg-[#651C2D]/40 text-[#777777] text-[11px] uppercase tracking-wider cursor-not-allowed"
+                              onClick={async () => {
+                                if (confirm(`Approve payment for Order #${item.orderNumber}? This will mark order as CONFIRMED_PROCESSING.`)) {
+                                  const res = await adminService.approvePayment(item.orderId);
+                                  if (res.success) {
+                                    alert('Payment approved and order confirmed!');
+                                    loadPayments();
+                                    loadOrders();
+                                  } else {
+                                    alert('Error: ' + res.error);
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 text-[11px] uppercase tracking-wider border border-emerald-700 cursor-pointer"
                             >
                               Approve
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const reason = prompt('Enter rejection reason for customer:');
+                                if (reason !== null) {
+                                  const res = await adminService.rejectPayment(item.orderId, reason || 'Payment details could not be verified.');
+                                  if (res.success) {
+                                    alert('Payment marked as rejected.');
+                                    loadPayments();
+                                    loadOrders();
+                                  } else {
+                                    alert('Error: ' + res.error);
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-950/60 hover:bg-red-900 text-red-300 text-[11px] uppercase tracking-wider border border-red-800 cursor-pointer"
+                            >
+                              Reject
                             </button>
                           </td>
                         </tr>
@@ -1415,6 +1449,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     standard_shipping_fee_paise: String(Math.round(parseFloat((formData.get('standardFee') as string) || '0') * 100)),
                     merchant_upi_id: formData.get('merchantUpiId'),
                     merchant_name: formData.get('merchantName'),
+                    merchant_qr_url: qrCodeDataUrl || (formData.get('merchantQrUrl') as string) || '',
+                    merchant_qr_enabled: formData.get('merchantQrEnabled') === 'on' ? '1' : '0',
+                    payment_instructions: formData.get('paymentInstructions'),
                   };
                   const res = await adminService.updateStoreSettings(payload);
                   if (res.success) {
@@ -1489,7 +1526,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {/* Section 3: Merchant UPI Gateway */}
                 <div className="bg-[#121212] border border-[#202020] p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg text-[#F0ECE5]">Merchant UPI ID Configuration</h3>
+                    <h3 className="font-serif text-lg text-[#F0ECE5]">Merchant UPI ID &amp; Payment Configuration</h3>
                     <span className="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 border border-emerald-800 text-[9px] uppercase font-bold">
                       Live in Database
                     </span>
@@ -1512,6 +1549,98 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         defaultValue={storeSettings?.merchantName || 'DRAYEN ATELIER'}
                         className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
                       />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[#777777] block text-[10px] uppercase mb-1">Additional Remittance / Payment Instructions</label>
+                    <textarea
+                      name="paymentInstructions"
+                      rows={2}
+                      defaultValue={storeSettings?.paymentInstructions || ''}
+                      placeholder="e.g. Please send payment via Google Pay, PhonePe, Paytm, or BHIM. Send screenshot to concierge@drayen.in if UTR verification is delayed."
+                      className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 4: Merchant QR Code Settings */}
+                <div className="bg-[#121212] border border-[#202020] p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-serif text-lg text-[#F0ECE5]">Merchant UPI QR Code</h3>
+                      <p className="text-xs text-[#777777]">Upload your custom merchant QR code image or enter an image URL.</p>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="merchantQrEnabled"
+                        defaultChecked={storeSettings?.merchantQrEnabled ?? true}
+                        className="accent-[#651C2D] w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-xs text-[#BFC0C2] font-mono uppercase">Enable QR in Checkout</span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-sans items-center">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[#777777] block text-[10px] uppercase mb-1">Upload New QR Code Image</label>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                          onChange={(e) => {
+                            setQrCodeFileError(null);
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 3 * 1024 * 1024) {
+                                setQrCodeFileError('QR image exceeds 3MB limit.');
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = (evt) => {
+                                setQrCodeDataUrl(evt.target?.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#BFC0C2] file:mr-3 file:py-1 file:px-2 file:border-0 file:bg-[#651C2D] file:text-white file:text-xs file:cursor-pointer cursor-pointer"
+                        />
+                        {qrCodeFileError && (
+                          <p className="text-red-400 text-[11px] mt-1">{qrCodeFileError}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-[#777777] block text-[10px] uppercase mb-1">Or QR Code Image URL</label>
+                        <input
+                          type="url"
+                          name="merchantQrUrl"
+                          value={qrCodeDataUrl || undefined}
+                          defaultValue={!qrCodeDataUrl ? storeSettings?.merchantQrUrl : undefined}
+                          onChange={(e) => setQrCodeDataUrl(e.target.value)}
+                          placeholder="https://... or data:image/..."
+                          className="w-full bg-[#181818] border border-[#202020] px-3 py-2 text-xs text-[#F0ECE5] font-mono focus:border-[#651C2D] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* QR Preview Box */}
+                    <div className="flex flex-col items-center justify-center p-4 bg-[#181818] border border-[#202020]">
+                      <span className="text-[10px] uppercase text-[#777777] mb-2 font-mono">Live QR Preview</span>
+                      <div className="p-3 bg-white border border-[#333]">
+                        <img
+                          src={qrCodeDataUrl || storeSettings?.merchantQrUrl || `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${storeSettings?.merchantUpiId || 'drayen.atelier@okaxis'}&pn=DRAYEN&cu=INR`)}`}
+                          alt="QR Preview"
+                          className="w-36 h-36 object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=drayen.atelier@okaxis&pn=DRAYEN&cu=INR`)}`;
+                          }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-[#888888] mt-2 font-mono">
+                        {qrCodeDataUrl ? 'Custom QR Code Selected' : storeSettings?.merchantQrUrl ? 'Active Custom QR' : 'Default Dynamic UPI QR'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1785,6 +1914,202 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* ======================================================== */}
+      {/* ORDER INSPECTION & STATUS UPDATE MODAL                    */}
+      {/* ======================================================== */}
+      {selectedOrderDetails && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-[#202020] max-w-2xl w-full p-6 md:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#202020] pb-4">
+              <div>
+                <span className="font-mono text-xs uppercase text-[#651C2D] font-bold">Consignment Audit</span>
+                <h3 className="font-serif text-2xl text-[#F0ECE5]">Order #{selectedOrderDetails.order_number}</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedOrderDetails(null);
+                  setOrderActionMsg(null);
+                }}
+                className="text-[#777777] hover:text-[#F0ECE5] text-xs font-mono"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {orderActionMsg && (
+              <div className="p-3 bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs">
+                {orderActionMsg}
+              </div>
+            )}
+
+            {/* Customer & Address Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans">
+              <div className="bg-[#181818] p-4 border border-[#202020] space-y-2">
+                <span className="text-[#777777] uppercase text-[10px] block font-mono">Customer Information</span>
+                <p className="font-bold text-[#F0ECE5]">{selectedOrderDetails.customer_name}</p>
+                <p className="text-[#BFC0C2]">{selectedOrderDetails.customer_email || 'No email'}</p>
+                <p className="text-[#BFC0C2]">{selectedOrderDetails.customer_phone || 'No phone'}</p>
+              </div>
+
+              <div className="bg-[#181818] p-4 border border-[#202020] space-y-2">
+                <span className="text-[#777777] uppercase text-[10px] block font-mono">Consignment Summary</span>
+                <div className="flex justify-between">
+                  <span className="text-[#777777]">Payable:</span>
+                  <span className="font-bold text-[#F0ECE5] font-serif">{formatINR(selectedOrderDetails.total_payable_paise)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#777777]">Payment Method:</span>
+                  <span className="uppercase text-[#F0ECE5]">{selectedOrderDetails.payment_method || 'UPI'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#777777]">Created:</span>
+                  <span className="text-[#BFC0C2]">{new Date(selectedOrderDetails.created_at).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Update Form Controls */}
+            <div className="bg-[#161616] p-5 border border-[#262626] space-y-4">
+              <div className="flex items-center justify-between border-b border-[#222] pb-3">
+                <h4 className="font-serif text-lg text-[#F0ECE5]">Update Live Fulfillment &amp; Payment Status</h4>
+                <span className="text-emerald-400 text-[10px] font-mono uppercase bg-emerald-950/60 px-2 py-0.5 border border-emerald-800">
+                  Direct DB Authority
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
+                <div>
+                  <label className="block text-[#777777] uppercase text-[10px] mb-1.5 font-mono">
+                    Fulfillment Status (order_status)
+                  </label>
+                  <select
+                    id="newOrderStatusSelect"
+                    defaultValue={selectedOrderDetails.order_status}
+                    className="w-full bg-[#121212] border border-[#2b2b2b] px-3 py-2.5 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
+                  >
+                    <option value="AWAITING_PAYMENT">Awaiting Payment</option>
+                    <option value="AWAITING_PAYMENT_VERIFICATION">Awaiting Payment Verification</option>
+                    <option value="CONFIRMED_PROCESSING">Confirmed Processing</option>
+                    <option value="PACKED">Packed in Atelier</option>
+                    <option value="SHIPPED">Shipped via Courier</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#777777] uppercase text-[10px] mb-1.5 font-mono">
+                    Payment Status (payment_status)
+                  </label>
+                  <select
+                    id="newPaymentStatusSelect"
+                    defaultValue={selectedOrderDetails.payment_status}
+                    className="w-full bg-[#121212] border border-[#2b2b2b] px-3 py-2.5 text-xs text-[#F0ECE5] focus:border-[#651C2D] focus:outline-none"
+                  >
+                    <option value="PENDING">Pending</option>
+                    <option value="SUBMITTED">Submitted (Proof Uploaded)</option>
+                    <option value="VERIFIED">Verified / Paid</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="REFUNDED">Refunded</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  disabled={isUpdatingOrder}
+                  onClick={async () => {
+                    const statusSelect = document.getElementById('newOrderStatusSelect') as HTMLSelectElement;
+                    const paymentSelect = document.getElementById('newPaymentStatusSelect') as HTMLSelectElement;
+                    if (!statusSelect || !paymentSelect) return;
+
+                    const newStatus = statusSelect.value;
+                    const newPayment = paymentSelect.value;
+
+                    setIsUpdatingOrder(true);
+                    setOrderActionMsg(null);
+                    try {
+                      const res = await adminService.updateOrderStatus(selectedOrderDetails.id, newStatus, newPayment);
+                      if (res.success) {
+                        setOrderActionMsg(`Order status successfully updated to ${newStatus} & ${newPayment}!`);
+                        setSelectedOrderDetails({
+                          ...selectedOrderDetails,
+                          order_status: newStatus as any,
+                          payment_status: newPayment as any,
+                        });
+                        loadOrders();
+                        loadOverview();
+                      } else {
+                        alert('Error updating order: ' + res.error);
+                      }
+                    } finally {
+                      setIsUpdatingOrder(false);
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-[#651C2D] hover:bg-[#85253b] text-white font-mono text-xs uppercase tracking-wider font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isUpdatingOrder ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving to Supabase...</span>
+                    </>
+                  ) : (
+                    <span>Save Order Status Changes</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Dispatch Shortcut */}
+            <div className="bg-[#181818] p-4 border border-[#202020] text-xs font-sans space-y-3">
+              <span className="text-[#777777] uppercase text-[10px] block font-mono">Quick Courier Dispatch Shortcut</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  id="quickCarrierInput"
+                  defaultValue="BlueDart Apex Air"
+                  placeholder="Carrier (e.g. BlueDart / Delhivery)"
+                  className="bg-[#121212] border border-[#2b2b2b] px-3 py-2 text-xs text-[#F0ECE5]"
+                />
+                <input
+                  type="text"
+                  id="quickAwbInput"
+                  placeholder="Tracking Number / AWB"
+                  className="bg-[#121212] border border-[#2b2b2b] px-3 py-2 text-xs text-[#F0ECE5] font-mono"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const carrier = (document.getElementById('quickCarrierInput') as HTMLInputElement)?.value || 'BlueDart';
+                  const tracking = (document.getElementById('quickAwbInput') as HTMLInputElement)?.value || '';
+                  if (!tracking.trim()) {
+                    alert('Please enter a tracking/AWB number.');
+                    return;
+                  }
+                  const res = await adminService.updateShipment(selectedOrderDetails.id, {
+                    carrier,
+                    trackingNumber: tracking.trim(),
+                  });
+                  if (res.success) {
+                    alert('Shipment recorded and order marked as SHIPPED!');
+                    setSelectedOrderDetails(null);
+                    loadOrders();
+                    loadShipments();
+                  } else {
+                    alert('Error: ' + res.error);
+                  }
+                }}
+                className="px-4 py-2 bg-[#202020] hover:bg-[#333333] text-[#F0ECE5] font-mono text-xs uppercase tracking-wider cursor-pointer"
+              >
+                Dispatch Consignment &amp; Save AWB
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* SCREENSHOT INSPECTION MODAL                               */}
       {/* ======================================================== */}
       {selectedVerification && verificationModalMode === 'inspect' && (
@@ -1818,15 +2143,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
               </div>
 
-              <div className="p-4 bg-[#0e0e0e] border border-[#202020] text-center">
-                <p className="font-mono text-[11px] text-[#777777]">
-                  Private screenshot streaming is handled via secure authenticated endpoint once backend is connected.
-                </p>
-              </div>
-
-              <div className="p-3 bg-amber-950/20 border border-amber-800 text-amber-300 text-[11px] font-mono">
-                "Payment verification is unavailable until the secure backend integration is configured."
-              </div>
+              {selectedVerification.screenshotUrl ? (
+                <div className="p-4 bg-[#0e0e0e] border border-[#202020] text-center">
+                  <p className="font-mono text-[11px] text-[#777777] mb-2">Customer Payment Proof Screenshot:</p>
+                  <img
+                    src={selectedVerification.screenshotUrl}
+                    alt="Payment Proof"
+                    className="max-h-72 mx-auto object-contain border border-[#333]"
+                  />
+                </div>
+              ) : (
+                <div className="p-4 bg-[#0e0e0e] border border-[#202020] text-center">
+                  <p className="font-mono text-[11px] text-[#777777]">
+                    Proof screenshot not stored or uploaded directly as transaction record.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-[#202020]">

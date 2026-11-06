@@ -257,6 +257,7 @@ export interface StoreSettings {
   merchantName: string;
   merchantQrUrl?: string;
   merchantQrEnabled: boolean;
+  paymentInstructions?: string;
   freeShippingThresholdPaise: number;
   standardShippingFeePaise: number;
   contactEmail: string;
