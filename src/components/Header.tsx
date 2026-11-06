@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
               <img
                 src="/drayen-logo.jpg"
                 alt="DRAYEN"
-                className="h-8 md:h-10 w-auto object-contain transition-opacity hover:opacity-90"
+                className="h-7 sm:h-9 md:h-10 max-w-[140px] sm:max-w-[180px] md:max-w-none w-auto object-contain transition-opacity hover:opacity-90"
               />
             </button>
           </div>

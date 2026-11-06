@@ -57,32 +57,38 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="flex flex-col w-full">
       {/* Primary Brand Grand Entrance Hero */}
-      <section className="relative w-full min-h-[90vh] md:min-h-screen bg-black overflow-hidden flex items-center justify-center border-b border-[#202020]">
-        <img
-          src="/drayen-hero-street.jpg"
-          alt="DRAYEN Rebellion & Luxury Gothic Talismans"
-          className="absolute inset-0 w-full h-full object-cover object-center filter brightness-[0.95] contrast-[1.05]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/40 pointer-events-none" />
+      <section className="relative w-full min-h-[85vh] sm:min-h-[90vh] md:min-h-screen bg-black overflow-hidden flex flex-col items-center justify-end border-b border-[#202020]">
+        {/* Background Visual optimized for both mobile vertical viewports and wide desktop */}
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src="/drayen-hero-street.jpg"
+            alt="DRAYEN Rebellion & Luxury Gothic Talismans"
+            className="w-full h-full object-cover object-[50%_40%] sm:object-center filter brightness-[0.92] sm:brightness-[0.95] contrast-[1.05]"
+          />
+          {/* Multi-layered gradient to ensure artwork and buttons stay crisp across all screen heights */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 sm:via-black/25 to-black/30 pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
+        </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center flex flex-col items-center justify-end pb-16 md:pb-24 min-h-[90vh] md:min-h-screen space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-black/75 border border-[#403e3d] backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-[#651C2D] animate-pulse" />
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#e5e2e1]">
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-12 sm:pb-16 md:pb-24 text-center flex flex-col items-center space-y-4 sm:space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 sm:px-4 sm:py-1.5 bg-black/80 border border-[#403e3d] backdrop-blur-md">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#651C2D] animate-pulse" />
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#e5e2e1]">
               Autumn / Winter 2025 Capsule
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-2 sm:pt-4">
             <button
               onClick={() => onNavigate('shop')}
-              className="h-13 px-8 bg-[#651C2D] text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase font-bold hover:bg-[#85253b] transition-all shadow-2xl cursor-pointer"
+              className="w-full sm:w-auto h-12 sm:h-13 px-6 sm:px-8 bg-[#651C2D] text-white flex items-center justify-center font-mono text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase font-bold hover:bg-[#85253b] active:scale-[0.99] transition-all shadow-2xl cursor-pointer"
             >
               EXPLORE COLLECTION
             </button>
             <button
               onClick={() => onNavigate('shop', 'Pendants')}
-              className="h-13 px-8 bg-black/80 text-[#F0ECE5] border border-[#383535] hover:bg-white/10 flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase transition-all backdrop-blur-md cursor-pointer"
+              className="w-full sm:w-auto h-12 sm:h-13 px-6 sm:px-8 bg-black/85 text-[#F0ECE5] border border-[#383535] hover:bg-white/10 active:scale-[0.99] flex items-center justify-center font-mono text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase transition-all backdrop-blur-md cursor-pointer"
             >
               VIEW TALISMANS
             </button>
