@@ -444,18 +444,17 @@ export const AccountView: React.FC<AccountViewProps> = ({
             AUTH PAGES: LOGIN, REGISTER, FORGOT-PASSWORD
             ========================================================================= */}
         {activeTab === 'login' && (
-          <div className="max-w-md mx-auto bg-[#121212] border border-[#202020] p-6 sm:p-10 shadow-2xl">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#651C2D] font-bold block mb-2">
-                ATELIER AUTHENTICATION
-              </span>
-              <h1 className="font-serif text-3xl sm:text-4xl text-[#F0ECE5] tracking-wide uppercase">
-                YOUR WORLD. YOUR RULES.
+          <div className="max-w-md mx-auto bg-black border border-[#202020] p-6 sm:p-10 shadow-2xl relative">
+            {/* Header: IDENTITY / INNER CIRCLE ACCESS with Red Glow */}
+            <div className="text-center mb-10">
+              <h1 className="font-serif text-3xl sm:text-5xl text-white tracking-[0.25em] uppercase font-bold blood-glow-text mb-3">
+                IDENTITY
               </h1>
-              <p className="font-sans text-xs text-[#777777] mt-3 leading-relaxed">
-                Sign in to your DRAYEN account to manage your orders, save your favourites and discover your next statement piece.
-              </p>
+              <div className="subtle-blood-divider">
+                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#888888]">
+                  INNER CIRCLE ACCESS
+                </span>
+              </div>
             </div>
 
             {/* Feedback Alert */}
@@ -463,7 +462,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
               <div
                 className={`p-3 mb-6 text-xs font-sans border ${
                   feedbackMessage.type === 'error'
-                    ? 'bg-[#651C2D]/15 border-[#651C2D] text-red-200'
+                    ? 'bg-[#8B0000]/20 border-[#8B0000] text-red-200'
                     : 'bg-emerald-950/20 border-emerald-800 text-emerald-200'
                 }`}
               >
@@ -471,54 +470,42 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
             )}
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form onSubmit={handleLoginSubmit} className="space-y-6">
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                  Email Address or Mobile Number
+                <label className="block font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777] mb-2">
+                  EMAIL ADDRESS
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
                   <input
                     type="text"
                     required
                     value={loginEmailOrPhone}
                     onChange={(e) => setLoginEmailOrPhone(e.target.value)}
-                    placeholder="patron@drayen.in or 9840012345"
-                    className="w-full bg-[#080808] border border-[#202020] pl-10 pr-4 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                    placeholder="patron@drayen.in"
+                    className="w-full bg-transparent border-b border-[#333333] pb-2 pt-1 text-sm text-[#F0ECE5] placeholder-[#444444] focus:border-[#8B0000] focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-mono text-xs uppercase tracking-wider text-[#BFC0C2]">
-                    Password
+                <div className="flex items-center justify-between mb-2">
+                  <label className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777]">
+                    PASSWORD
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('forgot');
-                      onNavigate('/forgot-password');
-                    }}
-                    className="text-xs font-sans text-[#777777] hover:text-[#BFC0C2] transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
                 </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#777777]" />
                   <input
                     type={showLoginPassword ? 'text' : 'password'}
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full bg-[#080808] border border-[#202020] pl-10 pr-10 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                    className="w-full bg-transparent border-b border-[#333333] pb-2 pt-1 pr-8 text-sm text-[#F0ECE5] placeholder-[#444444] focus:border-[#8B0000] focus:outline-none transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#777777] hover:text-[#F0ECE5]"
+                    className="absolute right-0 bottom-2 text-[#555555] hover:text-[#F0ECE5]"
                     aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
                   >
                     {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -526,78 +513,68 @@ export const AccountView: React.FC<AccountViewProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-[#651C2D] w-4 h-4 bg-[#080808] border-[#202020]"
-                />
-                <label htmlFor="rememberMe" className="text-xs text-[#777777] select-none cursor-pointer">
-                  Remember my credentials on this device
-                </label>
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('forgot');
+                    onNavigate('/forgot-password');
+                  }}
+                  className="text-[11px] font-mono uppercase tracking-widest text-[#777777] hover:text-white transition-colors"
+                >
+                  RESET CREDENTIALS
+                </button>
               </div>
 
+              {/* AUTHENTICATE BUTTON - Dual styling: Clean White or Crimson Blood */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 bg-[#651C2D] hover:bg-[#7e2338] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50 mt-2"
+                className="w-full py-4 bg-white hover:bg-[#8B0000] text-black hover:text-white font-mono text-xs uppercase tracking-[0.3em] font-bold transition-all shadow-lg hover:shadow-[0_0_25px_rgba(139,0,0,0.6)] disabled:opacity-50 mt-4 cursor-pointer"
               >
-                {isLoading ? 'Verifying Credentials...' : 'Sign In'}
+                {isLoading ? 'VERIFYING CREDENTIALS...' : 'AUTHENTICATE'}
               </button>
             </form>
 
-            <div className="border-t border-[#202020] mt-8 pt-6 space-y-4 text-center">
-              <p className="text-xs text-[#777777]">
-                New to DRAYEN?{' '}
+            <div className="border-t border-[#1a1a1a] mt-8 pt-6 space-y-4 text-center">
+              <p className="text-xs text-[#777777] font-mono tracking-wider">
+                NOT YET INITIALIZED?{' '}
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab('register');
                     onNavigate('/register');
                   }}
-                  className="text-[#F0ECE5] font-semibold hover:text-[#BFC0C2] underline ml-1"
+                  className="text-white font-bold hover:text-[#8B0000] transition-colors ml-1 uppercase"
                 >
-                  Create an Account
+                  INITIALIZE ACCOUNT
                 </button>
               </p>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('checkout')}
-                  className="text-xs font-mono uppercase tracking-wider text-[#777777] hover:text-[#BFC0C2] transition-colors"
-                >
-                  Continue as Guest to Checkout →
-                </button>
-              </div>
             </div>
           </div>
         )}
 
         {/* =========================================================================
-            REGISTER PAGE
+            REGISTER PAGE (INITIALIZATION / BECOME PART OF THE COLLECTIVE)
             ========================================================================= */}
         {activeTab === 'register' && (
-          <div className="max-w-md mx-auto bg-[#121212] border border-[#202020] p-6 sm:p-10 shadow-2xl">
-            <div className="text-center mb-8">
-              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#651C2D] font-bold block mb-2">
-                NEW PATRON ENROLMENT
-              </span>
-              <h1 className="font-serif text-3xl sm:text-4xl text-[#F0ECE5] tracking-wide uppercase">
-                JOIN THE DARK SIDE.
+          <div className="max-w-md mx-auto bg-black border border-[#202020] p-6 sm:p-10 shadow-2xl relative">
+            <div className="text-center mb-10">
+              <h1 className="font-serif text-3xl sm:text-5xl text-white tracking-[0.25em] uppercase font-bold blood-glow-text mb-3">
+                INITIALIZATION
               </h1>
-              <p className="font-sans text-xs text-[#777777] mt-3 leading-relaxed">
-                Create your DRAYEN account to access private drops, track your bespoke pieces, and curate your personal collection.
-              </p>
+              <div className="subtle-blood-divider">
+                <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#888888]">
+                  BECOME PART OF THE COLLECTIVE
+                </span>
+              </div>
             </div>
 
             {feedbackMessage && (
               <div
                 className={`p-3 mb-6 text-xs font-sans border ${
                   feedbackMessage.type === 'error'
-                    ? 'bg-[#651C2D]/15 border-[#651C2D] text-red-200'
+                    ? 'bg-[#8B0000]/20 border-[#8B0000] text-red-200'
                     : 'bg-emerald-950/20 border-emerald-800 text-emerald-200'
                 }`}
               >
@@ -605,10 +582,10 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </div>
             )}
 
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <form onSubmit={handleRegisterSubmit} className="space-y-6">
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                  Full Name *
+                <label className="block font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777] mb-2">
+                  FULL NAME
                 </label>
                 <input
                   type="text"
@@ -616,13 +593,13 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                   placeholder="Vikramaditya Roy"
-                  className="w-full bg-[#080808] border border-[#202020] px-4 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                  className="w-full bg-transparent border-b border-[#333333] pb-2 pt-1 text-sm text-[#F0ECE5] placeholder-[#444444] focus:border-[#8B0000] focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                  Email Address *
+                <label className="block font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777] mb-2">
+                  EMAIL ADDRESS
                 </label>
                 <input
                   type="email"
@@ -630,16 +607,16 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="patron@drayen.in"
-                  className="w-full bg-[#080808] border border-[#202020] px-4 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                  className="w-full bg-transparent border-b border-[#333333] pb-2 pt-1 text-sm text-[#F0ECE5] placeholder-[#444444] focus:border-[#8B0000] focus:outline-none transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                  10-Digit Mobile Number *
+                <label className="block font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777] mb-2">
+                  10-DIGIT MOBILE NUMBER
                 </label>
-                <div className="flex gap-2">
-                  <span className="flex items-center px-3 bg-[#080808] border border-[#202020] text-xs font-mono text-[#777777]">
+                <div className="flex gap-2 border-b border-[#333333] pb-2 pt-1">
+                  <span className="flex items-center text-xs font-mono text-[#777777]">
                     +91
                   </span>
                   <input
@@ -649,14 +626,14 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, ''))}
                     placeholder="9840012345"
-                    className="flex-1 bg-[#080808] border border-[#202020] px-4 py-3 text-sm text-[#F0ECE5] font-mono placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                    className="flex-1 bg-transparent text-sm text-[#F0ECE5] font-mono placeholder-[#444444] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#BFC0C2] mb-1.5">
-                  Account Password *
+                <label className="block font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#777777] mb-2">
+                  PASSWORD
                 </label>
                 <div className="relative">
                   <input
@@ -665,12 +642,12 @@ export const AccountView: React.FC<AccountViewProps> = ({
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Create a strong password"
-                    className="w-full bg-[#080808] border border-[#202020] pl-4 pr-10 py-3 text-sm text-[#F0ECE5] placeholder-[#777777] focus:border-[#651C2D] focus:outline-none transition-colors"
+                    className="w-full bg-transparent border-b border-[#333333] pb-2 pt-1 pr-8 text-sm text-[#F0ECE5] placeholder-[#444444] focus:border-[#8B0000] focus:outline-none transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowRegPassword(!showRegPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#777777] hover:text-[#F0ECE5]"
+                    className="absolute right-0 bottom-2 text-[#555555] hover:text-[#F0ECE5]"
                   >
                     {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -678,7 +655,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
                 {/* Password Criteria Checklist */}
                 {regPassword.length > 0 && (
-                  <div className="mt-2.5 p-3 bg-[#080808] border border-[#202020] text-[11px] font-mono grid grid-cols-2 gap-1.5 text-[#777777]">
+                  <div className="mt-2.5 p-3 bg-[#0a0a0a] border border-[#202020] text-[11px] font-mono grid grid-cols-2 gap-1.5 text-[#777777]">
                     <span className={passChecks.length ? 'text-emerald-400 flex items-center gap-1' : 'flex items-center gap-1'}>
                       <Check className="w-3 h-3" /> 8+ Characters
                     </span>
@@ -702,32 +679,32 @@ export const AccountView: React.FC<AccountViewProps> = ({
                   checked={regConsent}
                   onChange={(e) => setRegConsent(e.target.checked)}
                   required
-                  className="accent-[#651C2D] w-4 h-4 mt-0.5 bg-[#080808] border-[#202020]"
+                  className="accent-[#8B0000] w-4 h-4 mt-0.5 bg-[#080808] border-[#202020]"
                 />
                 <label htmlFor="consent" className="text-xs text-[#777777] leading-relaxed cursor-pointer select-none">
-                  I agree to DRAYEN's Terms of Patronage, Privacy Policy, and consent to receiving bespoke drops & order notifications.
+                  I agree to DRAYEN's Terms of Patronage and consent to private drop notifications.
                 </label>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading || !regConsent}
-                className="w-full py-3.5 bg-[#651C2D] hover:bg-[#7e2338] text-[#F0ECE5] font-sans text-xs uppercase tracking-widest font-bold transition-colors disabled:opacity-50 mt-2"
+                className="w-full py-4 bg-white hover:bg-[#8B0000] text-black hover:text-white font-mono text-xs uppercase tracking-[0.3em] font-bold transition-all shadow-lg hover:shadow-[0_0_25px_rgba(139,0,0,0.6)] disabled:opacity-50 mt-4 cursor-pointer"
               >
-                {isLoading ? 'Registering Account...' : 'Create Account'}
+                {isLoading ? 'INITIALIZING ACCOUNT...' : 'INITIALIZE ACCOUNT'}
               </button>
             </form>
 
-            <div className="border-t border-[#202020] mt-8 pt-6 text-center">
-              <p className="text-xs text-[#777777]">
-                Already have an account?{' '}
+            <div className="border-t border-[#1a1a1a] mt-8 pt-6 text-center">
+              <p className="text-xs text-[#777777] font-mono tracking-wider">
+                ALREADY IN THE COLLECTIVE?{' '}
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab('login');
                     onNavigate('/login');
                   }}
-                  className="text-[#F0ECE5] font-semibold hover:text-[#BFC0C2] underline ml-1"
+                  className="text-white font-bold hover:text-[#8B0000] transition-colors ml-1 uppercase"
                 >
                   Sign In
                 </button>

@@ -87,26 +87,66 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         {/* Content Container */}
         <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-12 sm:pb-16 md:pb-20 text-center flex flex-col items-center space-y-4 sm:space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 sm:px-4 sm:py-1.5 bg-black/85 border border-[#383535] backdrop-blur-md shadow-xl">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#651C2D] animate-pulse" />
-            <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#e5e2e1]">
-              Autumn / Winter 2025 Capsule
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 sm:px-4 sm:py-1.5 bg-black/90 border border-[#8B0000]/40 backdrop-blur-md shadow-2xl">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#8B0000] animate-pulse" />
+            <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.3em] text-[#e5e2e1]">
+              AETERNA SANGUIS • AUTUMN / WINTER
             </span>
           </div>
 
           <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-1">
             <button
               onClick={() => onNavigate('shop')}
-              className="w-full sm:w-auto h-12 sm:h-13 px-7 sm:px-9 bg-[#651C2D] text-white flex items-center justify-center font-mono text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase font-bold hover:bg-[#85253b] active:scale-[0.99] transition-all shadow-2xl cursor-pointer"
+              className="w-full sm:w-auto h-12 sm:h-13 px-8 sm:px-10 bg-white hover:bg-[#8B0000] text-black hover:text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all shadow-2xl hover:shadow-[0_0_25px_rgba(139,0,0,0.6)] cursor-pointer"
             >
               EXPLORE COLLECTION
             </button>
             <button
               onClick={() => onNavigate('shop', 'Pendants')}
-              className="w-full sm:w-auto h-12 sm:h-13 px-7 sm:px-9 bg-black/85 text-[#F0ECE5] border border-[#383535] hover:bg-white/10 active:scale-[0.99] flex items-center justify-center font-mono text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase transition-all backdrop-blur-md cursor-pointer"
+              className="w-full sm:w-auto h-12 sm:h-13 px-8 sm:px-10 bg-black/90 text-[#F0ECE5] border border-[#333333] hover:border-[#8B0000] hover:text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase transition-all backdrop-blur-md cursor-pointer"
             >
               VIEW TALISMANS
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Section: THE BLOOD PACT (Authentic Ritual Reference Integration) */}
+      <section className="relative w-full bg-black py-20 md:py-28 border-b border-[#1c1c1c] overflow-hidden">
+        <div className="max-w-[1300px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+          {/* Left Column: Authentic Sanguis Bottle Visual */}
+          <div className="relative group overflow-hidden border border-[#222222] bg-[#0a0a0a]">
+            <img
+              src="/the-blood-pact.jpg"
+              alt="The Blood Pact - Drayen Atelier"
+              className="w-full h-full object-cover filter contrast-[1.15] brightness-[0.9] transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 pointer-events-none" />
+          </div>
+
+          {/* Right Column: Reference Typography & Narrative */}
+          <div className="space-y-6 md:space-y-8 flex flex-col justify-center text-left">
+            <div className="space-y-2">
+              <span className="font-mono text-xs uppercase tracking-[0.3em] text-[#888888] block">
+                ATELIER PHILOSOPHY • VOL. III
+              </span>
+              <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl text-[#8B0000] tracking-wide uppercase font-bold leading-[1.05] blood-glow-text">
+                THE BLOOD<br />PACT
+              </h2>
+            </div>
+
+            <p className="font-mono text-xs sm:text-sm text-[#a3a3a3] uppercase tracking-[0.2em] leading-loose max-w-lg">
+              EVERY DROP WE RELEASE REQUIRES A TOLL. WHEN THE VAULT IS EMPTY, THE RELICS DISAPPEAR BACK INTO THE VOID. ACQUIRING A PIECE IS A BLOOD PACT. NO REMORSE.
+            </p>
+
+            <div className="pt-2">
+              <button
+                onClick={() => onNavigate('shop')}
+                className="h-12 px-8 bg-white hover:bg-[#8B0000] text-black hover:text-white font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all shadow-lg hover:shadow-[0_0_20px_rgba(139,0,0,0.6)] cursor-pointer"
+              >
+                SEAL THE PACT
+              </button>
+            </div>
           </div>
         </div>
       </section>

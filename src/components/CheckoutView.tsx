@@ -718,7 +718,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   <button
                     type="submit"
                     disabled={authLoading}
-                    className="w-full py-3 bg-[#651C2D] hover:bg-[#85253b] text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                    className="w-full py-4 bg-white hover:bg-[#8B0000] text-black hover:text-white font-mono text-xs uppercase tracking-[0.25em] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer mt-4 shadow-lg hover:shadow-[0_0_20px_rgba(139,0,0,0.6)] disabled:opacity-50"
                   >
                     {authLoading ? (
                       <>
@@ -728,7 +728,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     ) : (
                       <>
                         <Lock className="w-4 h-4" />
-                        <span>{authMode === 'login' ? 'Sign In & Unlock Checkout' : 'Register & Unlock Checkout'}</span>
+                        <span>{authMode === 'login' ? 'AUTHENTICATE & UNLOCK' : 'INITIALIZE & UNLOCK'}</span>
                       </>
                     )}
                   </button>
