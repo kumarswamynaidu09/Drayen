@@ -58,15 +58,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         {/* Content Container */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-12 sm:pb-16 md:pb-20 text-center flex flex-col items-center space-y-4 sm:space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 sm:px-4 sm:py-1.5 bg-black/90 border border-[#8B0000]/40 backdrop-blur-md shadow-2xl">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#8B0000] animate-pulse" />
-            <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.3em] text-[#e5e2e1]">
-              AETERNA SANGUIS • AUTUMN / WINTER
-            </span>
-          </div>
-
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-1">
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-12 sm:pb-16 md:pb-20 text-center flex flex-col items-center">
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={() => onNavigate('shop')}
               className="w-full sm:w-auto h-12 sm:h-13 px-8 sm:px-10 bg-white hover:bg-[#8B0000] text-black hover:text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all shadow-2xl hover:shadow-[0_0_25px_rgba(139,0,0,0.6)] cursor-pointer"
