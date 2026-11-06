@@ -1,5 +1,7 @@
 import { Order, OrderTimelineEvent, IntegrationState, OrderStatus } from '../types';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { config, getIntegrationState } from './config';
+import { authService } from './auth';
 
 export interface OrdersQueryResult {
   orders: Order[];
@@ -93,31 +95,79 @@ export const ordersService: OrdersService = {
 
   async getMyOrders(phoneOrToken?: string): Promise<OrdersQueryResult> {
     const integration = this.getIntegrationStatus();
+    const currentCustomer = authService.getCurrentUser();
 
-    // Check if phone or token provided
-    if (phoneOrToken) {
+    // 1. Direct Supabase Query for Authenticated Customer or Phone
+    if (isSupabaseConfigured) {
       try {
-        const baseUrl = config.apiBaseUrl || '';
-        const param = phoneOrToken.length === 10 ? `phone=${encodeURIComponent(phoneOrToken)}` : `token=${encodeURIComponent(phoneOrToken)}`;
-        const res = await fetch(`${baseUrl}/api/orders/my-orders?${param}`);
-        if (res.ok) {
-          const data = await res.json();
-          return {
-            orders: Array.isArray(data) ? data : [],
-            integrationState: { ...integration, status: 'CONNECTED' },
-          };
+        let query = supabase
+          .from('orders')
+          .select('*, order_items(*), shipments(*)')
+          .order('created_at', { ascending: false });
+
+        if (currentCustomer?.id) {
+          query = query.or(`customer_id.eq.${currentCustomer.id},customer_email.eq.${currentCustomer.email}`);
+        } else if (phoneOrToken && phoneOrToken.length === 10) {
+          query = query.eq('customer_phone', phoneOrToken);
+        } else if (phoneOrToken) {
+          query = query.eq('access_token', phoneOrToken);
+        } else {
+          return { orders: [], integrationState: integration };
+        }
+
+        const { data, error } = await query;
+        if (!error && Array.isArray(data)) {
+          const orders: Order[] = data.map((o) => ({
+            id: o.id,
+            orderNumber: o.order_number,
+            createdAt: o.created_at,
+            customer: {
+              fullName: o.customer_name,
+              email: o.customer_email || '',
+              phone: o.customer_phone,
+            },
+            shippingAddress: {
+              fullName: o.customer_name,
+              phone: o.customer_phone,
+              addressLine1: o.address_line1,
+              addressLine2: o.address_line2 || '',
+              city: o.city,
+              state: o.state,
+              pincode: o.postal_code,
+              addressType: 'home',
+            },
+            items: (o.order_items || []).map((item: any) => ({
+              product: {
+                id: item.product_id,
+                sku: item.product_sku,
+                name: item.product_name,
+                selling_price_paise: item.unit_price_paise,
+              } as any,
+              quantity: item.quantity,
+              unitPricePaise: item.unit_price_paise,
+              totalPricePaise: item.total_price_paise,
+            })),
+            shippingTier: o.shipping_tier === 'EXPRESS' ? 'express' : 'standard',
+            subtotalPaise: o.subtotal_paise,
+            shippingPaise: o.shipping_paise,
+            discountPaise: o.discount_paise,
+            promoCode: o.promo_code,
+            totalPayablePaise: o.total_payable_paise,
+            orderStatus: o.order_status,
+            paymentStatus: o.payment_status,
+            paymentMethod: o.payment_method === 'COD' ? 'cod' : 'upi',
+            accessToken: o.access_token,
+          }));
+
+          return { orders, integrationState: { ...integration, status: 'CONNECTED' } };
         }
       } catch (err: any) {
-        console.warn('[OrdersService] Error querying orders from backend:', err);
+        console.warn('[OrdersService] Supabase orders fetch note:', err);
       }
     }
 
-    // If backend is not connected or phone was not provided
     return {
       orders: [],
-      error: config.isBackendConnected
-        ? 'Please enter your customer phone number or order access token to retrieve your orders.'
-        : 'Customer Orders Service is not connected to a backend database. Teammate will connect GET /api/orders/my-orders.',
       integrationState: integration,
     };
   },
@@ -132,27 +182,66 @@ export const ordersService: OrdersService = {
       };
     }
 
-    try {
-      const baseUrl = config.apiBaseUrl || '';
-      let url = `${baseUrl}/api/orders/${encodeURIComponent(orderNumber)}/track`;
-      if (tokenOrPhone) {
-        url += tokenOrPhone.length === 10 ? `?phone=${encodeURIComponent(tokenOrPhone)}` : `?token=${encodeURIComponent(tokenOrPhone)}`;
-      }
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, order_items(*), shipments(*)')
+          .eq('order_number', orderNumber.trim())
+          .single();
 
-      const res = await fetch(url);
-      if (res.ok) {
-        const order = await res.json();
-        return {
-          order,
-          integrationState: { ...integration, status: 'CONNECTED' },
-        };
+        if (!error && data) {
+          const order: Order = {
+            id: data.id,
+            orderNumber: data.order_number,
+            createdAt: data.created_at,
+            customer: {
+              fullName: data.customer_name,
+              email: data.customer_email || '',
+              phone: data.customer_phone,
+            },
+            shippingAddress: {
+              fullName: data.customer_name,
+              phone: data.customer_phone,
+              addressLine1: data.address_line1,
+              addressLine2: data.address_line2 || '',
+              city: data.city,
+              state: data.state,
+              pincode: data.postal_code,
+              addressType: 'home',
+            },
+            items: (data.order_items || []).map((item: any) => ({
+              product: {
+                id: item.product_id,
+                sku: item.product_sku,
+                name: item.product_name,
+                selling_price_paise: item.unit_price_paise,
+              } as any,
+              quantity: item.quantity,
+              unitPricePaise: item.unit_price_paise,
+              totalPricePaise: item.total_price_paise,
+            })),
+            shippingTier: data.shipping_tier === 'EXPRESS' ? 'express' : 'standard',
+            subtotalPaise: data.subtotal_paise,
+            shippingPaise: data.shipping_paise,
+            discountPaise: data.discount_paise,
+            promoCode: data.promo_code,
+            totalPayablePaise: data.total_payable_paise,
+            orderStatus: data.order_status,
+            paymentStatus: data.payment_status,
+            paymentMethod: data.payment_method === 'COD' ? 'cod' : 'upi',
+            accessToken: data.access_token,
+          };
+
+          return { order, integrationState: { ...integration, status: 'CONNECTED' } };
+        }
+      } catch (err: any) {
+        console.warn('[OrdersService] Supabase single order note:', err);
       }
-    } catch (err: any) {
-      console.warn('[OrdersService] Backend lookup error for order:', orderNumber, err);
     }
 
     return {
-      error: `Order #${orderNumber} could not be retrieved. Backend orders lookup endpoint is not connected.`,
+      error: `Order #${orderNumber} could not be retrieved from the database.`,
       integrationState: integration,
     };
   },
