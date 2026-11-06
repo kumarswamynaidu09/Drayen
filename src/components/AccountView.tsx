@@ -593,17 +593,6 @@ export const AccountView: React.FC<AccountViewProps> = ({
               </p>
             </div>
 
-            {/* Integration Status Notice */}
-            <div className="p-4 bg-[#141414] border border-[#202020] mb-6 text-xs font-sans text-[#BFC0C2] space-y-1.5">
-              <div className="flex items-center gap-2 text-amber-400 font-mono text-[11px] uppercase tracking-wider font-semibold">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Backend Registration Contract</span>
-              </div>
-              <p className="text-[#777777] text-[11px] leading-relaxed">
-                Registration will dispatch to <code className="text-[#BFC0C2]">POST /api/auth/register</code> when connected. The UI validates requirements and handles backend responses safely.
-              </p>
-            </div>
-
             {feedbackMessage && (
               <div
                 className={`p-3 mb-6 text-xs font-sans border ${
