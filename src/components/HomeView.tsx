@@ -60,28 +60,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <section className="relative w-full min-h-[85vh] sm:min-h-[90vh] md:min-h-screen bg-black overflow-hidden flex flex-col justify-end border-b border-[#202020]">
         {/* Full-bleed background visual:
             - Desktop: edge-to-edge cover centered
-            - Mobile: object-cover focused right on the center crest and DRAYEN logo
+            - Mobile: object-cover focused right on the cross pendant and gothic aesthetic
             - Edge Dissolve & Vignette: radial and directional gradient mask softens and dissolves 
               all outer background elements smoothly into pure deep pitch-black! */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="/drayen-hero-street.jpg"
+            src="/drayen-hero-cross.jpg"
             alt="DRAYEN Rebellion & Luxury Gothic Talismans"
-            className="w-full h-full object-cover object-[50%_35%] md:object-center filter brightness-[0.95] contrast-[1.12]"
+            className="w-full h-full object-cover object-[70%_center] md:object-[60%_center] filter brightness-[0.92] contrast-[1.12]"
           />
 
-          {/* Radial dissolve mask focusing on the central dragon crest & DRAYEN lettering */}
+          {/* Radial dissolve mask focusing on the cross talisman & gothic statue */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 25%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.92) 75%, #000000 100%)'
+              background: 'radial-gradient(circle at 60% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.92) 80%, #000000 100%)'
             }}
           />
 
           {/* Directional gradients to dissolve top, bottom, and left/right edges into darkness */}
           <div className="absolute inset-x-0 top-0 h-32 md:h-44 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-48 md:h-64 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none" />
-          <div className="absolute inset-y-0 left-0 w-16 md:w-32 bg-gradient-to-r from-black via-black/70 to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-24 md:w-48 bg-gradient-to-r from-black via-black/80 to-transparent pointer-events-none" />
           <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-black via-black/70 to-transparent pointer-events-none" />
         </div>
 
