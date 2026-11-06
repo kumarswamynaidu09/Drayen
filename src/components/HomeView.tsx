@@ -56,7 +56,41 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   return (
     <div className="flex flex-col w-full">
-      {/* Section B: Hero Banner */}
+      {/* Primary Brand Grand Entrance Hero */}
+      <section className="relative w-full min-h-[90vh] md:min-h-screen bg-black overflow-hidden flex items-center justify-center border-b border-[#202020]">
+        <img
+          src="/drayen-hero-street.jpg"
+          alt="DRAYEN Rebellion & Luxury Gothic Talismans"
+          className="absolute inset-0 w-full h-full object-cover object-center filter brightness-[0.95] contrast-[1.05]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/40 pointer-events-none" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center flex flex-col items-center justify-end pb-16 md:pb-24 min-h-[90vh] md:min-h-screen space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-black/75 border border-[#403e3d] backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-[#651C2D] animate-pulse" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#e5e2e1]">
+              Autumn / Winter 2025 Capsule
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+            <button
+              onClick={() => onNavigate('shop')}
+              className="h-13 px-8 bg-[#651C2D] text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase font-bold hover:bg-[#85253b] transition-all shadow-2xl cursor-pointer"
+            >
+              EXPLORE COLLECTION
+            </button>
+            <button
+              onClick={() => onNavigate('shop', 'Pendants')}
+              className="h-13 px-8 bg-black/80 text-[#F0ECE5] border border-[#383535] hover:bg-white/10 flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase transition-all backdrop-blur-md cursor-pointer"
+            >
+              VIEW TALISMANS
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Section B: Hero Banner (Editorial Showcase) */}
       <section className="relative w-full bg-surface-container-lowest overflow-hidden">
         <div className="max-w-[1440px] mx-auto px-margin md:px-margin-desktop min-h-[calc(100vh-116px)] flex flex-col lg:flex-row items-center justify-between gap-gutter-desktop py-space-lg lg:py-0">
           {/* Left Column: Typography & CTAs */}
