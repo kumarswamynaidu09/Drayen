@@ -84,22 +84,27 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('home')} className="hover:text-white transition-colors cursor-pointer text-left">
+              <button onClick={() => onNavigate('faq')} className="hover:text-white transition-colors cursor-pointer text-left text-[#F0ECE5] font-semibold">
+                Frequently Asked Questions (FAQ) →
+              </button>
+            </li>
+            <li>
+              <button onClick={() => onNavigate('faq')} className="hover:text-white transition-colors cursor-pointer text-left">
                 Shipping &amp; Delivery (2-4 Days)
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('home')} className="hover:text-white transition-colors cursor-pointer text-left">
+              <button onClick={() => onNavigate('faq')} className="hover:text-white transition-colors cursor-pointer text-left">
                 7-Day Hassle-Free Exchange
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('home')} className="hover:text-white transition-colors cursor-pointer text-left">
+              <button onClick={() => onNavigate('faq')} className="hover:text-white transition-colors cursor-pointer text-left">
                 Lifetime Tarnish-Proof Promise
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('home')} className="hover:text-white transition-colors cursor-pointer text-left">
+              <button onClick={() => onNavigate('faq')} className="hover:text-white transition-colors cursor-pointer text-left">
                 Jewellery Care Guide
               </button>
             </li>

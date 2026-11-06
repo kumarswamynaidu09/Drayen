@@ -21,38 +21,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onToggleWishlist,
   wishlistIds = [],
 }) => {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [newsletterMsg, setNewsletterMsg] = useState(false);
 
   const bestsellers = products.slice(0, 4);
   const newArrivals = products.slice(4, 8);
-
-  const faqs = [
-    {
-      q: 'What materials and finishes are used in DRAYEN pieces?',
-      a: 'All DRAYEN jewelry is constructed from 316L surgical stainless steel or heavy solid pewter casts with hand-applied antique oxidation finishes. Our premium runs utilize genuine .925 sterling silver hallmarked components. They are 100% nickel-free and hypoallergenic.',
-    },
-    {
-      q: 'Will these chains turn my skin green or tarnish over time?',
-      a: 'Never. Our 316L stainless steel does not oxidize, rust, or leave green discoloration on skin, even with direct exposure to sweat, sea water, or daily showers. The antiqued dark highlights are permanently sealed.',
-    },
-    {
-      q: 'What chain lengths are provided with pendants?',
-      a: 'Most of our statement pendants come paired with an adjustable 20-inch to 24-inch (50cm – 60cm) heavy wheat or curb chain, designed to sit naturally on the chest over crewnecks and hoodies. Precise specs are specified on each product page.',
-    },
-    {
-      q: 'How should I care for and clean my gothic jewelry?',
-      a: 'Simply rinse with lukewarm water and mild soap, then wipe dry with a microfiber cloth. Avoid harsh chemical dips or ultrasonic jewelry cleaners, as these can strip the intended vintage patina in the recessed engravings.',
-    },
-    {
-      q: 'What are the delivery timelines across India?',
-      a: 'Metro orders are dispatched within 24 hours and typically arrive within 2 to 4 business days. Regional destinations take 4 to 6 business days. Full tracking details are emailed and WhatsApp messaged instantly upon dispatch.',
-    },
-    {
-      q: 'What is your exchange and return policy?',
-      a: 'We offer a hassle-free 7-day replacement or store credit guarantee if your piece arrives damaged or does not match your expectations. Items must remain unworn in original matte packaging.',
-    },
-  ];
 
   return (
     <div className="flex flex-col w-full">
@@ -340,74 +312,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* Section E: Brand Story */}
-      <section className="w-full bg-surface-container py-space-xl overflow-hidden relative border-t border-surface-container-high">
-        <div className="max-w-[1440px] mx-auto px-margin md:px-margin-desktop">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop items-center">
-            {/* Left Visual */}
-            <div className="lg:col-span-5 relative">
-              <div className="relative aspect-[4/5] bg-surface-container-lowest overflow-hidden shadow-2xl border border-surface-container-highest">
-                <img
-                  className="w-full h-full object-cover filter contrast-125"
-                  alt="Macro focus on hand-forged antique silver interlocking chain links"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-lOlzRtnci8_FlfuIIFJxpek9vl8G1NpGl_d5Aw5qTHTDnPOE0mMUTgzmkcYpMNlbkHM8Lcok86TjrOggBowlSUsTkHBvBRlNvDox7spOeYDVE4xHhlx1WT3814AQ01u7dcpW4OIXqQM4jiT1wZl-SA4UOZkANxf4A4lRn5K2d1B-KsYOtDE8N0DlRNslMv-N0ClDcGqVGbb3_xBsK_xxgguGxbjQlrnzUmZuJf-zAl6am6eHbvB3"
-                />
-              </div>
-              <div className="hidden sm:block absolute -bottom-8 -right-8 p-6 bg-surface-container-lowest max-w-xs shadow-xl border border-surface-container">
-                <span className="font-label-caps text-[10px] text-outline tracking-[0.2em] uppercase block mb-1">
-                  MANUFACTURING CODE
-                </span>
-                <p className="font-title-editorial text-title-editorial text-primary italic leading-snug">
-                  “No fragile platings. Only metals that endure your skin and journey.”
-                </p>
-              </div>
-            </div>
-
-            {/* Right Manifesto */}
-            <div className="lg:col-span-7 space-y-space-md lg:pl-space-lg">
-              <div className="space-y-space-xs">
-                <span className="font-label-caps text-label-caps text-outline uppercase tracking-[0.25em]">Atelier Philosophy</span>
-                <h2 className="font-headline-lg lg:font-display-hero text-headline-lg lg:text-[56px] text-primary uppercase leading-tight tracking-tight">
-                  DARK IS AN<br />
-                  <span className="italic font-normal text-on-surface-variant">IDENTITY.</span>
-                </h2>
-              </div>
-              <div className="space-y-4 font-body-lg text-body-lg text-outline leading-relaxed max-w-xl">
-                <p>
-                  Created for those who choose their own path. DRAYEN brings together gothic symbolism, alternative culture, and everyday expression without compromise.
-                </p>
-                <p className="font-body-md text-body-md text-on-surface-variant">
-                  Every cross, chain, and signet is engineered to carry real weight. We cast using hypoallergenic 316L marine-grade stainless steel and hand-oxidized silver finishes, resisting tarnish and sweat so your armor never yields.
-                </p>
-              </div>
-              <div className="pt-space-xs">
-                <button
-                  onClick={() => onNavigate('shop')}
-                  className="inline-flex items-center gap-3 h-12 px-space-md bg-surface-container-highest text-primary hover:bg-primary hover:text-on-primary font-label-caps text-label-caps uppercase tracking-[0.2em] transition-colors cursor-pointer"
-                >
-                  DISCOVER OUR ARCHIVE <span className="material-symbols-outlined text-[18px]">east</span>
-                </button>
-              </div>
-              {/* Spec Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-space-sm pt-6 bg-surface-container-low/50 p-4 border border-surface-container">
-                <div>
-                  <span className="font-headline-sm text-headline-sm text-primary block">100%</span>
-                  <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider">Water &amp; Sweat Proof</span>
-                </div>
-                <div>
-                  <span className="font-headline-sm text-headline-sm text-primary block">Zero</span>
-                  <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider">Green Skin Guarantee</span>
-                </div>
-                <div>
-                  <span className="font-headline-sm text-headline-sm text-primary block">.925 / 316L</span>
-                  <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider">Substantial Core</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Section F: New Arrivals */}
       {newArrivals.length > 0 && (
         <section className="w-full bg-surface py-space-xl border-t border-surface-container">
@@ -471,50 +375,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </section>
       )}
-
-      {/* Section G: Brand Benefits */}
-      <section className="w-full bg-surface-container-lowest py-space-lg border-t border-surface-container">
-        <div className="max-w-[1440px] mx-auto px-margin md:px-margin-desktop">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop">
-            <div className="flex flex-col space-y-3 p-6 bg-surface-container-low border border-surface-container">
-              <span className="material-symbols-outlined text-[32px] text-primary">auto_awesome</span>
-              <div className="space-y-1">
-                <h3 className="font-headline-sm text-[18px] text-primary">Distinctive Designs</h3>
-                <p className="font-body-sm text-body-sm text-outline">
-                  Hand-finished gothic iconography engineered for bold visual impact.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-3 p-6 bg-surface-container-low border border-surface-container">
-              <span className="material-symbols-outlined text-[32px] text-primary">straighten</span>
-              <div className="space-y-1">
-                <h3 className="font-headline-sm text-[18px] text-primary">Clear Specifications</h3>
-                <p className="font-body-sm text-body-sm text-outline">
-                  Exact millimetre measurements, chain thickness, and gram weight guides.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-3 p-6 bg-surface-container-low border border-surface-container">
-              <span className="material-symbols-outlined text-[32px] text-primary">shield_locked</span>
-              <div className="space-y-1">
-                <h3 className="font-headline-sm text-[18px] text-primary">Secure Checkout</h3>
-                <p className="font-body-sm text-body-sm text-outline">
-                  Instant UPI, RuPay, credit cards, and Cash on Delivery across India.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-3 p-6 bg-surface-container-low border border-surface-container">
-              <span className="material-symbols-outlined text-[32px] text-primary">inventory_2</span>
-              <div className="space-y-1">
-                <h3 className="font-headline-sm text-[18px] text-primary">Reliable Delivery</h3>
-                <p className="font-body-sm text-body-sm text-outline">
-                  Dispatched in discreet, custom matte black embossed jewelry boxes.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Section H: Styling Inspiration */}
       <section className="w-full bg-surface py-space-xl border-t border-surface-container">
@@ -673,44 +533,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <span className="font-label-mono-num text-[11px] text-on-surface-variant uppercase px-2 py-0.5 bg-surface-container">Thorn Choker</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section J: FAQ Accordion */}
-      <section className="w-full bg-surface py-space-xl border-t border-surface-container">
-        <div className="max-w-[1000px] mx-auto px-margin md:px-margin-desktop space-y-space-lg">
-          <div className="text-center space-y-2">
-            <span className="font-label-caps text-label-caps text-outline uppercase tracking-[0.25em]">Atelier Inquiries</span>
-            <h2 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">FREQUENTLY ASKED QUESTIONS.</h2>
-            <p className="font-body-md text-body-md text-outline">Everything you need to know about our metals, sizing, and dispatches.</p>
-          </div>
-          <div className="space-y-3 pt-space-xs">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div key={idx} className="bg-surface-container-low border border-surface-container transition-colors duration-200">
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none cursor-pointer"
-                    type="button"
-                  >
-                    <span className="font-title-editorial text-title-editorial text-primary tracking-wide">{faq.q}</span>
-                    <span
-                      className="material-symbols-outlined text-on-surface-variant transition-transform duration-300"
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                    >
-                      expand_more
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="px-6 pb-6 text-on-surface-variant font-body-md text-body-md leading-relaxed border-t border-surface-container pt-4">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
       </section>

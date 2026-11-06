@@ -16,6 +16,7 @@ export type RoutePath =
   | 'login'
   | 'register'
   | 'forgot-password'
+  | 'faq'
   | 'admin';
 
 export interface RouteState {
@@ -117,6 +118,9 @@ export function parseCurrentLocation(): RouteState {
   }
 
   // 11. Customer Account & Sub-routes
+  if (trimmed === '/faq') {
+    return { path: 'faq', rawPathname: trimmed, params: {}, query };
+  }
   if (trimmed === '/account') {
     return { path: 'account', rawPathname: trimmed, params: { accountTab: 'overview' }, query };
   }

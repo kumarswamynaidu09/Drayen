@@ -13,6 +13,7 @@ import { CheckoutView } from './components/CheckoutView';
 import { PaymentView } from './components/PaymentView';
 import { OrderTrackingView } from './components/OrderTrackingView';
 import { AccountView } from './components/AccountView';
+import { FaqView } from './components/FaqView';
 import { AdminPortal } from './components/AdminPortal';
 import { SearchModal } from './components/SearchModal';
 import { WishlistDrawer } from './components/WishlistDrawer';
@@ -433,6 +434,14 @@ export default function App() {
               navigate(`/payment/${encodeURIComponent(ordNum)}?token=${encodeURIComponent(tok)}`);
             }}
             onNavigateHome={() => navigate('/')}
+          />
+        )}
+
+        {/* ROUTE: /faq */}
+        {route.path === 'faq' && (
+          <FaqView
+            onNavigateHome={() => navigate('/')}
+            onNavigateShop={() => navigate('/shop')}
           />
         )}
 
