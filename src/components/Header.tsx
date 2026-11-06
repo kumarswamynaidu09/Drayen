@@ -89,9 +89,11 @@ export const Header: React.FC<HeaderProps> = ({
               className="inline-flex items-center gap-2 group cursor-pointer"
               aria-label="DRAYEN Home"
             >
-              <span className="font-serif text-2xl md:text-3xl tracking-[0.25em] text-[#F0ECE5] font-normal uppercase hover:text-[#BFC0C2] transition-colors">
-                DRAYEN
-              </span>
+              <img
+                src="/drayen-logo.jpg"
+                alt="DRAYEN"
+                className="h-8 md:h-10 w-auto object-contain transition-opacity hover:opacity-90"
+              />
             </button>
           </div>
 
