@@ -57,9 +57,39 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="absolute inset-y-0 right-0 w-16 md:w-32 bg-gradient-to-l from-black via-black/70 to-transparent pointer-events-none" />
         </div>
 
-        {/* Content Container */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-12 sm:pb-16 md:pb-20 text-center flex flex-col items-center">
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+        {/* Content Container with Animated Red Neon Logo Crest & Title */}
+        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pb-10 sm:pb-14 md:pb-16 text-center flex flex-col items-center space-y-6 sm:space-y-8">
+          
+          {/* Central Animated Neon Crest & Branding Unit */}
+          <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
+            
+            {/* Logo Emblem inside Pulsing Red Neon Light Ring */}
+            <div className="relative flex items-center justify-center p-3 sm:p-4 rounded-full bg-black/80 border border-red-600/60 neon-red-box backdrop-blur-md">
+              {/* Outer faint neon aura halo */}
+              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-red-600/30 via-red-500/20 to-red-600/30 blur-md pointer-events-none" />
+              
+              <img
+                src="/drayen-logo.jpg"
+                alt="DRAYEN Crest"
+                className="relative z-10 h-8 sm:h-11 md:h-12 w-auto object-contain filter drop-shadow-[0_0_12px_rgba(255,20,60,0.8)]"
+              />
+            </div>
+
+            {/* Title & Gothic Subtitle with Neon Glow */}
+            <div className="space-y-1.5">
+              <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl text-white uppercase tracking-[0.25em] sm:tracking-[0.3em] font-bold neon-red-text">
+                DRAYEN
+              </h1>
+              <div className="subtle-blood-divider">
+                <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.35em] text-[#cccccc] font-medium">
+                  ARMOR FOR THE SOVEREIGN VOID
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-1">
             <button
               onClick={() => onNavigate('shop')}
               className="w-full sm:w-auto h-12 sm:h-13 px-8 sm:px-10 bg-white hover:bg-[#8B0000] text-black hover:text-white flex items-center justify-center font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all shadow-2xl hover:shadow-[0_0_25px_rgba(139,0,0,0.6)] cursor-pointer"

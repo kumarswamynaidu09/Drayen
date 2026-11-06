@@ -48,6 +48,45 @@
   text-shadow: 0 0 20px rgba(139, 0, 0, 0.7), 0 0 40px rgba(168, 0, 0, 0.4);
 }
 
+/* Animated Red Neon Light Aura */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(220, 20, 60, 0.5),
+                0 0 35px rgba(139, 0, 0, 0.4),
+                inset 0 0 15px rgba(220, 20, 60, 0.3);
+    border-color: rgba(220, 20, 60, 0.7);
+    filter: drop-shadow(0 0 16px rgba(220, 20, 60, 0.65));
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 30, 70, 0.85),
+                0 0 55px rgba(168, 0, 0, 0.7),
+                inset 0 0 25px rgba(255, 30, 70, 0.5);
+    border-color: rgba(255, 50, 80, 0.95);
+    filter: drop-shadow(0 0 28px rgba(255, 30, 70, 0.9));
+  }
+}
+
+@keyframes neonTextGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 50, 80, 0.8),
+                 0 0 25px rgba(220, 20, 60, 0.7),
+                 0 0 50px rgba(139, 0, 0, 0.6);
+  }
+  50% {
+    text-shadow: 0 0 18px rgba(255, 80, 100, 1),
+                 0 0 38px rgba(255, 20, 60, 0.9),
+                 0 0 75px rgba(180, 0, 0, 0.85);
+  }
+}
+
+.neon-red-box {
+  animation: neonPulse 3.5s ease-in-out infinite;
+}
+
+.neon-red-text {
+  animation: neonTextGlow 3.5s ease-in-out infinite;
+}
+
 .subtle-blood-divider {
   display: flex;
   align-items: center;
